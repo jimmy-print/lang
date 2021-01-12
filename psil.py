@@ -4,8 +4,8 @@ import atoms
 from atoms import Function, Adder, Int
 
 
-add_path = [atoms.LEFT]
 def get_add_paths_and_vals(s):
+    add_path = [atoms.LEFT]
     for t in s[1:len(s)]:
         if t == 'ADD(':
             if add_path[-1] == atoms.LEFT:
@@ -52,6 +52,14 @@ def get_tree(s):
     return root
 
 
-tree = get_tree(input('Enter expression: ').strip().split())
-Function.thru_vis(tree)
-print('Answer: %s' % tree())
+if __name__ == '__main__':
+    try:
+        while True:
+            s = input('>> ')
+            if s == '':
+                continue
+            tree = get_tree(s.strip().split())
+            print('Answer: %s' % tree())
+    except EOFError:
+        print()
+        exit()
