@@ -3,33 +3,12 @@
 LEFT, RIGHT = 'LEFT', 'RIGHT'
 
 
-class Atom:
-    def __init__(self, val):
-        assert type(val) == int
-        self.v = val
-
-    def __call__(self):
-        return self.v
-
-
-class Add:
-    def __init__(self, *args):
-        self.args = args
-
-    def __call__(self):
-        sum = 0
-        for arg in self.args:
-            sum += arg()
-        return sum
-
-
 class Node:
     # node on tree
     def __init__(self, v):
         self.v = v
         self.r1 = None
         self.r2 = None
-        self.been = False
 
     def add_left(self, r1):
         self.r1 = r1
@@ -37,9 +16,15 @@ class Node:
     def add_right(self, r2):
         self.r2 = r2
 
+    def __call__(self):
+        if self.v == 'A(':
+            return self.r1() + self.r2()
+        elif type(self.v) == int:
+            return self.v
+
     @staticmethod
     def thru(node):
-        '''depth first iterate'''
+        """depth first iterate"""
         yield node
         if node.r1 is not None:
             yield from Node.thru(node.r1)
@@ -59,7 +44,7 @@ class Node:
             Node.thru_vis(node.r2, layer, side=RIGHT)
 
     def __getitem__(self, item):
-        '''indexing using depth first search'''
+        """indexing using depth first search"""
         for i, node in enumerate(Node.thru(self)):
             if i == item:
                 return node
@@ -101,10 +86,7 @@ def add_node_right(root, index, v2):
     to_add_on.add_right(Node(v2))
 
 
-string = 'A( 4 A( 3 4 ) )'
-s = string.split()
 add_path = [LEFT]
-
 def get_add_paths_and_vals(s):
     for t in s[1:len(s)]:
         if t == 'A(':
@@ -136,13 +118,22 @@ def get_tree(s):
         on_node_path = find_path[0:len(find_path) - 1]
         on_node = root.get_item_using_branch_path(on_node_path)
 
+        is_int = None
+        try:
+            int(val)
+        except ValueError:
+            is_int = False
+        else:
+            is_int = True
+
         direction = find_path[-1]
         if direction == LEFT:
-            on_node.add_left(Node(val))
+            on_node.add_left(Node(int(val))) if is_int else on_node.add_left(Node(val))
         elif direction == RIGHT:
-            on_node.add_right(Node(val))
+            on_node.add_right(Node(int(val))) if is_int else on_node.add_right(Node(val))
 
     return root
 
 
-Node.thru_vis(get_tree(input('Enter expression').strip().split()))
+tree = get_tree(input('Enter expression: ').strip().split())
+print(tree())
