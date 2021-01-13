@@ -1,5 +1,6 @@
 LEFT, RIGHT = 'LEFT', 'RIGHT'
 
+
 class Int:
     """End nodes on a tree"""
     def __init__(self, v):
@@ -11,10 +12,12 @@ class Int:
     def __call__(self):
         return self.v
 
+
 class Function:
     """Not end nodes"""
     def __init__(self):
-        self.v = 'ADD'
+        self.v = NotImplemented
+
     def add_left(self, r1):
         self.r1 = r1
 
@@ -23,6 +26,15 @@ class Function:
 
     def __call__(self):
         raise NotImplementedError
+
+    @staticmethod
+    def thru(node):
+        """depth first iterate"""
+        yield node
+        if node.r1 is not None:
+            yield from Function.thru(node.r1)
+        if node.r2 is not None:
+            yield from Function.thru(node.r2)
 
     @staticmethod
     def thru_vis(node, layer=0, side=None):
@@ -59,6 +71,15 @@ class Function:
                 tmp_node = tmp_node.r2
         return tmp_node
 
+
 class Adder(Function):
+    name = 'add'
     def __call__(self):
         return self.r1() + self.r2()
+
+class Subtracter(Function):
+    name = 'sub'
+    def __call__(self):
+        return self.r1() - self.r2()
+
+functions = Adder, Subtracter
