@@ -2,6 +2,7 @@
 
 import atoms
 from atoms import Function, Adder, Int
+from exceptions import PsilException
 
 
 def get_add_paths_and_vals(s):
@@ -35,6 +36,7 @@ def get_tree(s):
         for func in atoms.functions:
             if func.name == function:
                 return func
+        raise PsilException('Function \'%s\' does not exist' % function)
     root_function = get_function(s[0].strip('('))
     root = root_function()
     for find_path, val in get_add_paths_and_vals(s):

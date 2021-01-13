@@ -1,0 +1,2 @@
+class PsilException(Exception):
+    pass

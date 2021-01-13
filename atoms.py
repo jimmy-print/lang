@@ -1,3 +1,5 @@
+from exceptions import PsilException
+
 LEFT, RIGHT = 'LEFT', 'RIGHT'
 
 
@@ -75,11 +77,27 @@ class Function:
 class Adder(Function):
     name = 'add'
     def __call__(self):
+        try:
+            self.r1
+        except AttributeError:
+            raise PsilException('Argument 1 is missing')
+        try:
+            self.r2
+        except AttributeError:
+            raise PsilException('Argument 2 is missing')
         return self.r1() + self.r2()
 
 class Subtracter(Function):
     name = 'sub'
     def __call__(self):
+        try:
+            self.r1
+        except AttributeError:
+            raise PsilException('Argument 1 is missing')
+        try:
+            self.r2
+        except AttributeError:
+            raise PsilException('Argument 2 is missing')
         return self.r1() - self.r2()
 
 functions = Adder, Subtracter
