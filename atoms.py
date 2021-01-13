@@ -80,11 +80,11 @@ class Adder(Function):
         try:
             self.r1
         except AttributeError:
-            raise PsilException('Argument 1 is missing')
+            raise PsilException('Argument 1 is missing for function \'%s\'' % type(self).name)
         try:
             self.r2
         except AttributeError:
-            raise PsilException('Argument 2 is missing')
+            raise PsilException('Argument 2 is missing for function \'%s\'' % type(self).name)
         return self.r1() + self.r2()
 
 class Subtracter(Function):
@@ -93,11 +93,11 @@ class Subtracter(Function):
         try:
             self.r1
         except AttributeError:
-            raise PsilException('Argument 1 is missing')
+            raise PsilException('Argument 1 is missing for function \'%s\'' % type(self).name)
         try:
             self.r2
         except AttributeError:
-            raise PsilException('Argument 2 is missing')
+            raise PsilException('Argument 2 is missing for function \'%s\'' % type(self).name)
         return self.r1() - self.r2()
 
 functions = Adder, Subtracter
