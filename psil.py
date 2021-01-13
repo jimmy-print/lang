@@ -74,6 +74,8 @@ if __name__ == '__main__':
                 print(tree())
             except KeyboardInterrupt:
                 print()
+            except PsilException as e:
+                print(e)
     except EOFError:
         print()
         exit()
