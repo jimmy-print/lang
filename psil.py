@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import atoms
+import sys
 from atoms import Function, Adder, Int
 from exceptions import PsilException
 
@@ -64,6 +65,11 @@ def get_tree(s):
 
 
 if __name__ == '__main__':
+    if len(sys.argv) != 1:
+        s = sys.argv[1]
+        tree = get_tree(s.strip().split())
+        print(tree())
+        exit()
     try:
         while True:
             try:
