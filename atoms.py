@@ -76,6 +76,7 @@ class Function:
 
 class Adder(Function):
     name = 'add'
+    len_args = 2
     def __call__(self):
         try:
             self.r1
@@ -89,6 +90,7 @@ class Adder(Function):
 
 class Subtracter(Function):
     name = 'sub'
+    len_args = 2
     def __call__(self):
         try:
             self.r1
@@ -100,4 +102,18 @@ class Subtracter(Function):
             raise PsilException('Argument 2 is missing for function \'%s\'' % type(self).name)
         return self.r1() - self.r2()
 
-functions = Adder, Subtracter
+class Printer(Function):
+    name = 'print'
+    def __call__(self):
+        try:
+            self.r1
+        except AttributeError:
+            raise PsilException('Argument 1 is missing for function \'%s\'' % type(self).name)
+        try:
+            self.r2
+        except AttributeError: pass
+        else:
+            raise PsilException('Argument 2 is not accepted by the \'%s\' function' % type(self).name)
+        print(self.r1())
+
+functions = Adder, Subtracter, Printer

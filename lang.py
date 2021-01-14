@@ -77,7 +77,7 @@ if __name__ == '__main__':
                 if s == '':
                     continue
                 tree = get_tree(s.strip().split())
-                print(tree())
+                tree()
             except KeyboardInterrupt:
                 print()
             except PsilException as e:
