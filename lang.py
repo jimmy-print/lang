@@ -68,7 +68,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 1:
         s = sys.argv[1]
         tree = get_tree(s.strip().split())
-        print(tree())
+        tree()
         exit()
     try:
         while True:
