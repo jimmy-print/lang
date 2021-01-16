@@ -2,6 +2,7 @@
 
 import atoms
 import sys
+import parse
 from atoms import Function, Adder, Int
 from exceptions import PsilException
 
@@ -76,7 +77,7 @@ if __name__ == '__main__':
                 s = input('>> ')
                 if s == '':
                     continue
-                tree = get_tree(s.strip().split())
+                tree = get_tree(parse.get_tokens(s))
                 tree()
             except KeyboardInterrupt:
                 print()
