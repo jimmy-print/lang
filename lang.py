@@ -2,9 +2,39 @@
 
 import atoms
 import sys
-import parse
 from atoms import Function, Adder, Int, Str
 from exceptions import PsilException
+
+
+def get_tokens(s):
+    split = s.strip().split()
+    def remove_all_instances_of_right_paren(string):
+        out = []
+        for c in string:
+            if c != ')':
+                out.append(c)
+        return ''.join(out)
+
+    out = []
+
+    # Check if (add 1 1 ) or ( add 1 1) or ( add 1 1 )
+    for tok in split:
+        if tok == ')' or tok == '(':
+            raise PsilException('Syntax')
+
+    for tok in split:
+        if ')' not in tok:
+            out.append(tok)
+        else:
+            out.append(remove_all_instances_of_right_paren(tok))
+            len_of_right_paren = 0
+            for c in tok:
+                if c == ')':
+                    len_of_right_paren += 1
+            for _ in range(len_of_right_paren):
+                out.append(')')
+
+    return out
 
 
 def get_add_paths_and_vals(s):
@@ -97,11 +127,12 @@ if __name__ == '__main__':
                 s = input('>> ')
                 if is_whitespace(s):
                     continue
-                tree = get_tree(parse.get_tokens(s))
+                tree = get_tree(get_tokens(s))
                 tree()
             except KeyboardInterrupt:
                 print()
             except PsilException as e:
+                print('*Exception*')
                 print(e)
     except EOFError:
         print()

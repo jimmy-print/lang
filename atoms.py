@@ -4,6 +4,7 @@ LEFT, RIGHT = 'LEFT', 'RIGHT'
 
 
 class Int:
+    name = 'int'
     def __init__(self, v):
         assert type(v) == int
         self.v = v
@@ -14,6 +15,7 @@ class Int:
         return self.v
 
 class Str:
+    name = 'str'
     def __init__(self, s):
         assert type(s) == str
         self.v = s
@@ -26,6 +28,7 @@ class Str:
 
 class Function:
     """Not end nodes"""
+    name = NotImplemented
     def __init__(self):
         self.v = NotImplemented
 
@@ -86,57 +89,77 @@ class Function:
 class Adder(Function):
     name = 'add'
     len_args = 2
+    arglist_spec = Int, Int
     def __call__(self):
-        if type(self.r1) == Int or super(type(self.r2)) == Function:
-            pass
-        elif type(self.r2) == Int or super(type(self.r2)) == Function:
+        try: self.r1
+        except AttributeError:
+            raise PsilException('Arg 1 does not exist for function \'%s\'' % type(self).name)
+        try: self.r2
+        except AttributeError:
+            raise PsilException('Arg 2 does not exist for function \'%s\'' % type(self).name)
+
+        if type(self.r1) == Function:
             pass
         else:
-            raise PsilException('All argument types must be Int or Function for function \'%s\'' % type(self).name)
+            if type(self.r1) == type(self).arglist_spec[0]:
+                pass
+            else:
+                raise PsilException(
+                    'Arg 1 should be type \'%s\', but it is type \'%s\''
+                    % (type(self).arglist_spec[0].name, type(self.r1).name))
+        if type(self.r2) == Function:
+            pass
+        else:
+            if type(self.r2) == type(self).arglist_spec[1]:
+                pass
+            else:
+                raise PsilException(
+                    'Arg 2 should be type \'%s\', but it is type \'%s\''
+                    % (type(self).arglist_spec[1].name, type(self.r2).name))
 
-        try:
-            self.r1
-        except AttributeError:
-            raise PsilException('Argument 1 is missing for function \'%s\'' % type(self).name)
-        try:
-            self.r2
-        except AttributeError:
-            raise PsilException('Argument 2 is missing for function \'%s\'' % type(self).name)
         return self.r1() + self.r2()
 
 class Subtracter(Function):
     name = 'sub'
     len_args = 2
+    arglist_spec = Int, Int
     def __call__(self):
-        if type(self.r1) == Int or super(type(self.r2)) == Function:
-            pass
-        elif type(self.r2) == Int or super(type(self.r2)) == Function:
+        try: self.r1
+        except AttributeError:
+            raise PsilException('Arg 1 does not exist for function \'%s\'' % type(self).name)
+        try: self.r2
+        except AttributeError:
+            raise PsilException('Arg 2 does not exist for function \'%s\'' % type(self).name)
+
+        if type(self.r1) == Function:
             pass
         else:
-            raise PsilException('All argument types must be Int or Function for function \'%s\'' % type(self).name)
+            if type(self.r1) == type(self).arglist_spec[0]:
+                pass
+            else:
+                raise PsilException(
+                    'Arg 1 for function \'%s\' should be type \'%s\', but it is type \'%s\''
+                    % (type(self).name, type(self).arglist_spec[0].name, type(self.r1).name))
+        if type(self.r2) == Function:
+            pass
+        else:
+            if type(self.r2) == type(self).arglist_spec[1]:
+                pass
+            else:
+                raise PsilException(
+                    'Arg 2 for function \'%s\' should be type \'%s\', but it is type \'%s\''
+                    % (type(self).name, type(self).arglist_spec[1].name, type(self.r2).name))
 
-        try:
-            self.r1
-        except AttributeError:
-            raise PsilException('Argument 1 is missing for function \'%s\'' % type(self).name)
-        try:
-            self.r2
-        except AttributeError:
-            raise PsilException('Argument 2 is missing for function \'%s\'' % type(self).name)
         return self.r1() - self.r2()
 
 class Printer(Function):
     name = 'print'
+    len_args = 1
+    arglist_spec = None
     def __call__(self):
-        try:
-            self.r1
+        try: self.r1
         except AttributeError:
-            raise PsilException('Argument 1 is missing for function \'%s\'' % type(self).name)
-        try:
-            self.r2
-        except AttributeError: pass
-        else:
-            raise PsilException('Argument 2 is not accepted by the \'%s\' function' % type(self).name)
+            raise PsilException('Arg 1 does not exist for function \'%s\'' % type(self).name)
         print(self.r1())
 
 class Setter(Function):
