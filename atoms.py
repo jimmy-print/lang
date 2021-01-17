@@ -87,8 +87,13 @@ class Adder(Function):
     name = 'add'
     len_args = 2
     def __call__(self):
-        if type(self.r1) != Int or type(self.r2) != Int:
-            raise PsilException('Both arguments must be integers for function \'%s\'' % type(self).name)
+        if type(self.r1) == Int or super(type(self.r2)) == Function:
+            pass
+        elif type(self.r2) == Int or super(type(self.r2)) == Function:
+            pass
+        else:
+            raise PsilException('All argument types must be Int or Function for function \'%s\'' % type(self).name)
+
         try:
             self.r1
         except AttributeError:
@@ -103,6 +108,13 @@ class Subtracter(Function):
     name = 'sub'
     len_args = 2
     def __call__(self):
+        if type(self.r1) == Int or super(type(self.r2)) == Function:
+            pass
+        elif type(self.r2) == Int or super(type(self.r2)) == Function:
+            pass
+        else:
+            raise PsilException('All argument types must be Int or Function for function \'%s\'' % type(self).name)
+
         try:
             self.r1
         except AttributeError:
