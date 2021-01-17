@@ -3,7 +3,7 @@
 import atoms
 import sys
 import parse
-from atoms import Function, Adder, Int
+from atoms import Function, Adder, Int, Str
 from exceptions import PsilException
 
 
@@ -39,31 +39,51 @@ def get_tree(s):
             if func.name == function:
                 return func
         raise PsilException('Function \'%s\' does not exist' % function)
+
+    def get_type_of_value(value):
+        # Either return Int, Str, or Function
+        if value[0] == '"' and value[-1] == '"':
+            return atoms.Str
+        if value[0] == '\'' or value[-1] == '\'':
+            raise PsilException('Use double quotes for strings.')
+        if value[0] == '(':
+            return atoms.Function
+        return atoms.Int
+
     root_function = get_function(s[0].strip('('))
     root = root_function()
     for find_path, val in get_add_paths_and_vals(s):
         on_node_path = find_path[0:len(find_path) - 1]
         on_node = root.get_item_using_branch_path(on_node_path)
 
-        try:
-            int(val)
-        except ValueError:
-            is_int = False
-        else:
-            is_int = True
+        type_ = get_type_of_value(val)
 
-        type_of_function = None
-        if not is_int:
+        if type_ == atoms.Function:
             type_of_function = get_function(val.strip('('))
 
         direction = find_path[-1]
         if direction == atoms.LEFT:
-            on_node.add_left(Int(int(val))) if is_int else on_node.add_left(type_of_function())
+            if type_ == atoms.Int:
+                on_node.add_left(Int(int(val)))
+            elif type_ == atoms.Str:
+                on_node.add_left(Str(str(val.strip('"'))))
+            elif type_ == atoms.Function:
+                on_node.add_left(type_of_function())
         elif direction == atoms.RIGHT:
-            on_node.add_right(Int(int(val))) if is_int else on_node.add_right(type_of_function())
+            if type_ == atoms.Int:
+                on_node.add_right(Int(int(val)))
+            elif type_ == atoms.Str:
+                on_node.add_right(Str(str(val.strip('"'))))
+            elif type_ == atoms.Function:
+                on_node.add_right(type_of_function())
 
     return root
 
+def is_whitespace(s):
+    for c in s:
+        if c != ' ':
+            return False
+    return True
 
 if __name__ == '__main__':
     if len(sys.argv) != 1:
@@ -75,7 +95,7 @@ if __name__ == '__main__':
         while True:
             try:
                 s = input('>> ')
-                if s == '':
+                if is_whitespace(s):
                     continue
                 tree = get_tree(parse.get_tokens(s))
                 tree()

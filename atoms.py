@@ -4,10 +4,19 @@ LEFT, RIGHT = 'LEFT', 'RIGHT'
 
 
 class Int:
-    """End nodes on a tree"""
     def __init__(self, v):
         assert type(v) == int
         self.v = v
+        self.r1 = None
+        self.r2 = None
+
+    def __call__(self):
+        return self.v
+
+class Str:
+    def __init__(self, s):
+        assert type(s) == str
+        self.v = s
         self.r1 = None
         self.r2 = None
 
@@ -78,6 +87,8 @@ class Adder(Function):
     name = 'add'
     len_args = 2
     def __call__(self):
+        if type(self.r1) != Int or type(self.r2) != Int:
+            raise PsilException('Both arguments must be integers for function \'%s\'' % type(self).name)
         try:
             self.r1
         except AttributeError:
@@ -116,4 +127,7 @@ class Printer(Function):
             raise PsilException('Argument 2 is not accepted by the \'%s\' function' % type(self).name)
         print(self.r1())
 
-functions = Adder, Subtracter, Printer
+class Setter(Function):
+    name = 'set'
+
+functions = Adder, Subtracter, Printer, Setter
