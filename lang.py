@@ -2,7 +2,7 @@
 
 import atoms
 import sys
-from atoms import Function, Adder, Int, Str
+from atoms import Function, Adder, Int, Str, Setter, VariableNameValuePair, Variable
 from exceptions import PsilException
 
 
@@ -78,6 +78,8 @@ def get_tree(s):
             raise PsilException('Use double quotes for strings.')
         if value[0] == '(':
             return atoms.Function
+        if value[0] == '$':
+            return atoms.Variable
         return atoms.Int
 
     root_function = get_function(s[0].strip('('))
@@ -99,6 +101,8 @@ def get_tree(s):
                 on_node.add_left(Str(str(val.strip('"'))))
             elif type_ == atoms.Function:
                 on_node.add_left(type_of_function())
+            elif type_ == atoms.Variable:
+                on_node.add_left(Variable(val[1:len(val)]))
         elif direction == atoms.RIGHT:
             if type_ == atoms.Int:
                 on_node.add_right(Int(int(val)))
@@ -106,6 +110,8 @@ def get_tree(s):
                 on_node.add_right(Str(str(val.strip('"'))))
             elif type_ == atoms.Function:
                 on_node.add_right(type_of_function())
+            elif type_ == atoms.Variable:
+                on_node.add_right(Variable(val[1:len(val)]))
 
     return root
 
@@ -115,25 +121,20 @@ def is_whitespace(s):
             return False
     return True
 
+
 if __name__ == '__main__':
-    if len(sys.argv) != 1:
-        s = sys.argv[1]
-        tree = get_tree(get_tokens(s))
-        tree()
-        exit()
-    try:
-        while True:
-            try:
-                s = input('>> ')
-                if is_whitespace(s):
-                    continue
-                tree = get_tree(get_tokens(s))
-                tree()
-            except KeyboardInterrupt:
-                print()
-            except PsilException as e:
-                print('*Exception*')
-                print(e)
-    except EOFError:
-        print()
-        exit()
+    with open(sys.argv[1]) as f:
+        s = f.read()
+
+    variables = {}
+
+    for line in s.split('\n'):
+        if is_whitespace(line):
+            continue
+        tree = get_tree(get_tokens(line))
+
+        if type(tree) == Setter:
+            pair = tree(variables)
+            variables[pair.v1] = pair.v2
+        else:
+            tree(variables)

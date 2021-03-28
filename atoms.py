@@ -11,7 +11,8 @@ class Int:
         self.r1 = None
         self.r2 = None
 
-    def __call__(self):
+    def __call__(self, variables):  # Int does not need access to variables, but it simplifies
+        # the code, since all calls to self.r1() or self.r2() can be just self.r*(variables)
         return self.v
 
 class Str:
@@ -22,7 +23,7 @@ class Str:
         self.r1 = None
         self.r2 = None
 
-    def __call__(self):
+    def __call__(self, variables):
         return self.v
 
 
@@ -55,6 +56,8 @@ class Function:
         gap = ''
         for _ in range(0, layer):
             gap += ' '
+
+        # TODO show function name since Function.v is NotImplemented
         print('%s %s' % (gap, node.v))
         layer += 1
         if node.r1 is not None:
@@ -88,81 +91,94 @@ class Function:
 
 class Adder(Function):
     name = 'add'
-    len_args = 2
-    arglist_spec = Int, Int
-    def __call__(self):
-        try: self.r1
-        except AttributeError:
-            raise PsilException('Arg 1 does not exist for function \'%s\'' % type(self).name)
-        try: self.r2
-        except AttributeError:
-            raise PsilException('Arg 2 does not exist for function \'%s\'' % type(self).name)
+    # This function accepts two parameters, both of which can only be integers.
 
-        if type(self.r1) == Function:
-            pass
-        else:
-            if type(self.r1) == type(self).arglist_spec[0]:
-                pass
-            else:
-                raise PsilException(
-                    'Arg 1 should be type \'%s\', but it is type \'%s\''
-                    % (type(self).arglist_spec[0].name, type(self.r1).name))
-        if type(self.r2) == Function:
-            pass
-        else:
-            if type(self.r2) == type(self).arglist_spec[1]:
-                pass
-            else:
-                raise PsilException(
-                    'Arg 2 should be type \'%s\', but it is type \'%s\''
-                    % (type(self).arglist_spec[1].name, type(self.r2).name))
+    def __call__(self, variables):
+        try:
+            self.r1
+        except AttributeError:
+            raise PsilException(f'Argument 1 does not exist for function {type(self).name}')
+        try:
+            self.r2
+        except AttributeError:
+            raise PsilException(f'Argument 2 does not exist for function {type(self).name}')
 
-        return self.r1() + self.r2()
+        # Potential speed issue here. To type check, every parameter is evaluated before being evaluated again.
+        # Instead the program can save self.r1() (for instance) to a variable, then for return self.r1() ...,
+        # just put return r1 + r2. TODO
+        if type(self.r1(variables)) != int:
+            raise PsilException(f'Argument 1 must be Int for function {type(self).name}')
+        if type(self.r2(variables)) != int:
+            raise PsilException(f'Argument 2 must be Int for function {type(self).name}')
+
+        return self.r1(variables) + self.r2(variables)
 
 class Subtracter(Function):
     name = 'sub'
-    len_args = 2
-    arglist_spec = Int, Int
-    def __call__(self):
-        try: self.r1
-        except AttributeError:
-            raise PsilException('Arg 1 does not exist for function \'%s\'' % type(self).name)
-        try: self.r2
-        except AttributeError:
-            raise PsilException('Arg 2 does not exist for function \'%s\'' % type(self).name)
 
-        if type(self.r1) == Function:
-            pass
-        else:
-            if type(self.r1) == type(self).arglist_spec[0]:
-                pass
-            else:
-                raise PsilException(
-                    'Arg 1 for function \'%s\' should be type \'%s\', but it is type \'%s\''
-                    % (type(self).name, type(self).arglist_spec[0].name, type(self.r1).name))
-        if type(self.r2) == Function:
-            pass
-        else:
-            if type(self.r2) == type(self).arglist_spec[1]:
-                pass
-            else:
-                raise PsilException(
-                    'Arg 2 for function \'%s\' should be type \'%s\', but it is type \'%s\''
-                    % (type(self).name, type(self).arglist_spec[1].name, type(self.r2).name))
+    def __call__(self, variables):
+        try:
+            self.r1
+        except AttributeError:
+            raise PsilException(f'Argument 1 does not exist for function {type(self).name}')
+        try:
+            self.r2
+        except AttributeError:
+            raise PsilException(f'Argument 2 does not exist for function {type(self).name}')
 
-        return self.r1() - self.r2()
+        # Potential speed issue here. To type check, every parameter is evaluated before being evaluated again.
+        # Instead the program can save self.r1() (for instance) to a variable, then for return self.r1() ...,
+        # just put return r1 + r2. TODO
+        if type(self.r1(variables)) != int:
+            raise PsilException(f'Argument 1 must be str for function {type(self).name}')
+        if type(self.r2(variables)) != int:
+            raise PsilException(f'Argument 2 must be str for function {type(self).name}')
+
+        return self.r1(variables) - self.r2(variables)
 
 class Printer(Function):
     name = 'print'
     len_args = 1
     arglist_spec = None
-    def __call__(self):
+    def __call__(self, variables):
         try: self.r1
         except AttributeError:
             raise PsilException('Arg 1 does not exist for function \'%s\'' % type(self).name)
-        print(self.r1())
+
+        print(self.r1(variables))
+
+
+class Variable:
+    name = 'var'
+    def __init__(self, s):
+        assert type(s) == str
+        self.v = s
+        self.r1 = None
+        self.r2 = None
+
+    def __call__(self, variables):
+        return variables[self.v]
+
+class VariableNameValuePair:
+    def __init__(self, v1, v2):
+        self.v1 = v1
+        self.v2 = v2
 
 class Setter(Function):
     name = 'set'
+    def __call__(self, variables):
+        try:
+            self.r1
+        except AttributeError:
+            raise PsilException('Arg 1 does not exist for function \'%s\'' % type(self).name)
+        try:
+            self.r2
+        except AttributeError:
+            raise PsilException('Arg 2 does not exist for function \'%s\'' % type(self).name)
+
+        if type(self.r1(variables)) != str:
+            raise PsilException(f'Arg 1 must be str for function {type(self).name}')
+
+        return VariableNameValuePair(self.r1(variables), self.r2(variables))
 
 functions = Adder, Subtracter, Printer, Setter
