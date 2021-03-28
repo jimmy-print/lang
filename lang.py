@@ -3,7 +3,7 @@
 import atoms
 import sys
 from atoms import Function, Adder, Int, Str, Setter, VariableNameValuePair, Variable
-from exceptions import PsilException
+from exceptions import LangException
 
 
 def get_tokens(s):
@@ -20,7 +20,7 @@ def get_tokens(s):
     # Check if (add 1 1 ) or ( add 1 1) or ( add 1 1 )
     for tok in split:
         if tok == ')' or tok == '(':
-            raise PsilException('Syntax')
+            raise LangException('Syntax')
 
     for tok in split:
         if ')' not in tok:
@@ -68,14 +68,14 @@ def get_tree(s):
         for func in atoms.functions:
             if func.name == function:
                 return func
-        raise PsilException('Function \'%s\' does not exist' % function)
+        raise LangException('Function \'%s\' does not exist' % function)
 
     def get_type_of_value(value):
         # Either return Int, Str, or Function
         if value[0] == '"' and value[-1] == '"':
             return atoms.Str
         if value[0] == '\'' or value[-1] == '\'':
-            raise PsilException('Use double quotes for strings.')
+            raise LangException('Use double quotes for strings.')
         if value[0] == '(':
             return atoms.Function
         if value[0] == '$':

@@ -1,4 +1,4 @@
-from exceptions import PsilException
+from exceptions import LangException
 
 LEFT, RIGHT = 'LEFT', 'RIGHT'
 
@@ -97,19 +97,19 @@ class Adder(Function):
         try:
             self.r1
         except AttributeError:
-            raise PsilException(f'Argument 1 does not exist for function {type(self).name}')
+            raise LangException(f'Argument 1 does not exist for function {type(self).name}')
         try:
             self.r2
         except AttributeError:
-            raise PsilException(f'Argument 2 does not exist for function {type(self).name}')
+            raise LangException(f'Argument 2 does not exist for function {type(self).name}')
 
         # Potential speed issue here. To type check, every parameter is evaluated before being evaluated again.
         # Instead the program can save self.r1() (for instance) to a variable, then for return self.r1() ...,
         # just put return r1 + r2. TODO
         if type(self.r1(variables)) != int:
-            raise PsilException(f'Argument 1 must be Int for function {type(self).name}')
+            raise LangException(f'Argument 1 must be Int for function {type(self).name}')
         if type(self.r2(variables)) != int:
-            raise PsilException(f'Argument 2 must be Int for function {type(self).name}')
+            raise LangException(f'Argument 2 must be Int for function {type(self).name}')
 
         return self.r1(variables) + self.r2(variables)
 
@@ -120,19 +120,19 @@ class Subtracter(Function):
         try:
             self.r1
         except AttributeError:
-            raise PsilException(f'Argument 1 does not exist for function {type(self).name}')
+            raise LangException(f'Argument 1 does not exist for function {type(self).name}')
         try:
             self.r2
         except AttributeError:
-            raise PsilException(f'Argument 2 does not exist for function {type(self).name}')
+            raise LangException(f'Argument 2 does not exist for function {type(self).name}')
 
         # Potential speed issue here. To type check, every parameter is evaluated before being evaluated again.
         # Instead the program can save self.r1() (for instance) to a variable, then for return self.r1() ...,
         # just put return r1 + r2. TODO
         if type(self.r1(variables)) != int:
-            raise PsilException(f'Argument 1 must be str for function {type(self).name}')
+            raise LangException(f'Argument 1 must be str for function {type(self).name}')
         if type(self.r2(variables)) != int:
-            raise PsilException(f'Argument 2 must be str for function {type(self).name}')
+            raise LangException(f'Argument 2 must be str for function {type(self).name}')
 
         return self.r1(variables) - self.r2(variables)
 
@@ -143,7 +143,7 @@ class Printer(Function):
     def __call__(self, variables):
         try: self.r1
         except AttributeError:
-            raise PsilException('Arg 1 does not exist for function \'%s\'' % type(self).name)
+            raise LangException('Arg 1 does not exist for function \'%s\'' % type(self).name)
 
         print(self.r1(variables))
 
@@ -170,14 +170,14 @@ class Setter(Function):
         try:
             self.r1
         except AttributeError:
-            raise PsilException('Arg 1 does not exist for function \'%s\'' % type(self).name)
+            raise LangException('Arg 1 does not exist for function \'%s\'' % type(self).name)
         try:
             self.r2
         except AttributeError:
-            raise PsilException('Arg 2 does not exist for function \'%s\'' % type(self).name)
+            raise LangException('Arg 2 does not exist for function \'%s\'' % type(self).name)
 
         if type(self.r1(variables)) != str:
-            raise PsilException(f'Arg 1 must be str for function {type(self).name}')
+            raise LangException(f'Arg 1 must be str for function {type(self).name}')
 
         return VariableNameValuePair(self.r1(variables), self.r2(variables))
 

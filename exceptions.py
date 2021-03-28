@@ -1,2 +1,2 @@
-class PsilException(Exception):
+class LangException(Exception):
     pass
