@@ -147,6 +147,23 @@ class Printer(Function):
 
         print(self.r1(variables))
 
+class Equals(Function):
+    name = 'equals'
+    len_args = 2
+
+    def __call__(self, variables):
+        try:
+            self.r1
+        except AttributeError:
+            raise LangException(f'Argument 1 does not exist for function {type(self).name}')
+        try:
+            self.r2
+        except AttributeError:
+            raise LangException(f'Argument 2 does not exist for function {type(self).name}')
+
+        if self.r1(variables) == self.r2(variables):
+            return 1
+        return 0
 
 class Variable:
     name = 'var'
@@ -181,4 +198,4 @@ class Setter(Function):
 
         return VariableNameValuePair(self.r1(variables), self.r2(variables))
 
-functions = Adder, Subtracter, Printer, Setter
+functions = Adder, Subtracter, Printer, Setter, Equals

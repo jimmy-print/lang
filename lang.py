@@ -2,7 +2,7 @@
 
 import atoms
 import sys
-from atoms import Function, Adder, Int, Str, Setter, VariableNameValuePair, Variable
+from atoms import *
 from exceptions import LangException
 
 
@@ -121,6 +121,15 @@ def is_whitespace(s):
             return False
     return True
 
+def is_comment(s):
+    found_hash = False
+    for c in s:
+        if not found_hash and c != '#' and c != ' ':
+            return False
+        if c == '#':
+            found_hash = True
+    return True
+
 
 if __name__ == '__main__':
     with open(sys.argv[1]) as f:
@@ -130,6 +139,8 @@ if __name__ == '__main__':
 
     for line in s.split('\n'):
         if is_whitespace(line):
+            continue
+        if is_comment(line):
             continue
         tree = get_tree(get_tokens(line))
 
