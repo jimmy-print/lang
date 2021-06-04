@@ -1,3 +1,3 @@
 Lisp-like interpreted language
 
-    python lang.py code.txt
+    python ll.py code.la
