@@ -71,9 +71,37 @@ class Printer(Node):
         print(self.nodes[1]())
 
 
+class If(Node):
+    name = 'if'
+
+    def __call__(self):
+        if self.nodes[1]() == True:
+            assert type(self.nodes[2]) == Exelist
+            self.nodes[2]()
+
+
+class Equals(Node):
+    name = 'eq'
+
+    def __call__(self):
+        if self.nodes[1]() == self.nodes[2]():
+            return True
+        return False
+
+
+class Exelist(Node):
+    name = 'exelist'
+
+    def __call__(self):
+        for node in self.nodes:
+            node()
+            # TODO: implement returning
+
+
 class Root(Node):
     # returns the return value of its first node. it should only have one son node.
     def __call__(self):
+        assert len(self.nodes) == 1
         return self.nodes[0]()
 
-functions = Adder, Subtracter, Printer
+functions = Adder, Subtracter, Printer, Exelist, If, Equals

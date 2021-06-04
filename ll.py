@@ -1,3 +1,4 @@
+import sys
 from atoms import *
 
 NICHT = '('
@@ -90,7 +91,16 @@ def get_tree(tokens):
 
 
 if __name__ == '__main__':
-    s = '(print (add 2 3 4 45))'
-    tokens = get_tokens(s)
-    tree = get_tree(tokens)
-    tree()
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+    else:
+        print('please provide filename')
+        exit()
+
+    with open(filename) as f:
+        s = f.read().strip()
+
+    for line in s.split('\n'):
+        tokens = get_tokens(line)
+        tree = get_tree(tokens)
+        tree()
