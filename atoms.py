@@ -13,7 +13,7 @@ class Node:  # aka Function
         gap = ''
         for _ in range(layer):
             gap += ' '
-        print(gap, n.v)
+            print(gap, n.v)
         for node in n.nodes:
             if node is not None:
                 Node.vis(node, layer + 1)
@@ -89,6 +89,13 @@ class Equals(Node):
         return False
 
 
+class Input(Node):
+    name = 'input'
+
+    def __call__(self):
+        return input(self.nodes[1]())
+
+
 class Exelist(Node):
     name = 'exelist'
 
@@ -104,4 +111,4 @@ class Root(Node):
         assert len(self.nodes) == 1
         return self.nodes[0]()
 
-functions = Adder, Subtracter, Printer, Exelist, If, Equals
+functions = Adder, Subtracter, Printer, Exelist, If, Equals, Input

@@ -14,8 +14,9 @@ class Test(unittest.TestCase):
 
     def test_all_lines(self):
         for expr in self.tests:
-            print(expr)
-            self.assertEqual(ll.get_tree(ll.get_tokens(expr))(), self.tests[expr])
+            result = ll.get_tree(ll.get_tokens(expr))()
+            print(f'expr: {expr}, result: {result}')
+            self.assertEqual(result, self.tests[expr])
 
 if __name__ == '__main__':
     unittest.main()

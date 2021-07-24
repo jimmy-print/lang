@@ -1,3 +1,3 @@
-(print "hello,world")
-(print (eq 1 1))
-(if (eq 1 1) (exelist (print "yes,oneisequaltoone") (print "secondprintinexelist")))
+(if (eq (input "input") (input "again-input")) (exelist (print "two-things-equal") (print "secondprintinexelist")))
+(print "program-completed")
+(input "press-enter-to-exit")
