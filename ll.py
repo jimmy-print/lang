@@ -6,11 +6,13 @@ from atoms import *
 NICHT = '('
 BACK = ')'
 
+
 def is_whitespace(s):
     for c in s:
         if c != ' ':
             return False
     return True
+
 
 def is_comment(s):
     found_hash = False
@@ -48,6 +50,7 @@ def get_appropriate_function_class(tok):
 
 def get_tokens(s):
     split = s.strip().split()
+
     def remove_all_instances_of_right_paren(string):
         out = []
         for c in string:
