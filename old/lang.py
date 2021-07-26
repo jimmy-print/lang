@@ -146,6 +146,7 @@ if __name__ == '__main__':
 
         if type(tree) == Setter:
             pair = tree(variables)
+            print(pair)
             variables[pair.v1] = pair.v2
         else:
             tree(variables)

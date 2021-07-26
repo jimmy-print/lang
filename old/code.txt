@@ -1,3 +1,5 @@
 (set "name" "jimmy")
 (print "hello")
 (print $name)
+(print (set "name" 1))
+(print $name)

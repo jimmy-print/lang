@@ -1,3 +1,19 @@
-(if (eq (input "input") (input "again-input")) (exelist (print "two-things-equal") (print "secondprintinexelist")))
-(print "program-completed")
-(input "press-enter-to-exit")
+(set "number" (int (input "input-a-number")))
+(set "isprime" "none")
+
+(if (= $number 0) (exelist (set "isprime" 0)))
+(if (= $number 1) (exelist (set "isprime" 0)))
+
+(set "i" 2)
+(while (< $i (- $number 1)) (exelist (if (= (% $number $i) 0) (exelist (set "isprime" 0))) (print $i) (set "i" (+ $i 1))))
+
+(if (= $isprime "none") (exelist (set "isprime" 1)))
+
+(if (= $isprime 1) (exelist (print "number-is-prime")))
+(if (= $isprime 0) (exelist (print "number-is-not-prime")))
+
+##########
+
+(set "a" 0)
+(set "b" 0)
+(while (< $a 10) (exelist (while (< $b 10) (exelist (print $a) (print $b) (set "b" (+ $b 1)))) (set "a" (+ $a 1))))

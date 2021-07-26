@@ -6,12 +6,37 @@ from atoms import *
 NICHT = '('
 BACK = ')'
 
+def is_whitespace(s):
+    for c in s:
+        if c != ' ':
+            return False
+    return True
+
+def is_comment(s):
+    found_hash = False
+    for c in s:
+        if not found_hash and c != '#' and c != ' ':
+            return False
+        if c == '#':
+            found_hash = True
+    return True
+
+
 def is_int(v):
     try:
         int(v)
         return True
     except ValueError:
         return False
+
+
+def is_str(v):
+    # not that v can be converted into a string type,
+    # but that it is literally a string in the code file
+    # (set name "john")
+    if v[0] == '"' and v[-1] == '"':
+        return True
+    return False
 
 
 def get_appropriate_function_class(tok):
@@ -83,6 +108,10 @@ def get_tree(tokens):
         else:
             if is_int(tok):
                 on_tok.add(Thing(int(tok), None))
+            elif is_str(tok):
+                on_tok.add(Thing(str(tok.strip('"')), None))
+            elif tok[0] == '$':
+                on_tok.add(Variable(tok[1:len(tok)]))
             else:
                 on_tok.add(Thing(tok, None))
 
@@ -102,7 +131,12 @@ if __name__ == '__main__':
     with open(filename) as f:
         s = f.read().strip()
 
+    variables = {}
+
     for line in s.split('\n'):
+        if is_whitespace(line) or is_comment(line):
+            continue
+
         tokens = get_tokens(line)
         tree = get_tree(tokens)
-        tree()
+        tree(variables)
