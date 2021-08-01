@@ -41,6 +41,36 @@ def is_str(v):
     return False
 
 
+def chomp(s: str, c: str):
+    out = []
+    for C in s:
+        if C != c:
+            out.append(C)
+
+    return ''.join(out)
+
+
+def compress_whitespace(s: str):
+    """
+    Converts consecutive spaces of length greater than 1 into a single space
+    :param s: eg. ' 123  34   3 '
+    :returns: eg. ' 123 34 3 '
+    """
+
+    out = []
+    for i, c in enumerate(s):
+        tmp = ''
+        if i != len(s) - 1:
+            tmp = c
+            if c == ' ' and s[i + 1] == ' ':
+                pass
+            else:
+                out.append(tmp)
+
+    out.append(s[-1])
+    return ''.join(out)
+
+
 def get_appropriate_function_class(tok):
     for function in functions:
         if tok == function.name:
@@ -50,6 +80,10 @@ def get_appropriate_function_class(tok):
 
 def get_tokens(s):
     split = s.strip().split()
+
+    for i, tok in enumerate(split):
+        if not is_whitespace(tok):
+            split[i] = tok
 
     def remove_all_instances_of_right_paren(string):
         out = []
@@ -134,12 +168,23 @@ if __name__ == '__main__':
     with open(filename) as f:
         s = f.read().strip()
 
+    exprs = []
+    for S in s.split(';'):
+        if not is_whitespace(S):
+            exprs.append(compress_whitespace(chomp(S.strip(), '\n')))
+
     variables = {}
 
-    for line in s.split('\n'):
+    for line in exprs:
         if is_whitespace(line) or is_comment(line):
             continue
 
         tokens = get_tokens(line)
-        tree = get_tree(tokens)
+
+        toktok = []
+        for tok in tokens:
+            if not is_whitespace(tok):
+                toktok.append(tok)
+
+        tree = get_tree(toktok)
         tree(variables)
