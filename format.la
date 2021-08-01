@@ -1,0 +1,30 @@
+(set "x" 0);
+(set "y" 0);
+
+(while (< $x 10) ({
+    (while (< $y 10) ({
+        (print "{}" $x)
+        (print "{}" $y)
+        
+        (set "y" (+ $y 1))
+    ))
+    (set "x" (+ $x 1))
+    (set "y" 0)
+    (print "")
+));
+
+
+# Instead of what is done above, do this:;
+(set "x" 0);
+(set "y" 0);
+
+(while (< $x 10) ({
+    (while (< $y 10) ({
+        (print "x:{},y:{}" $x $y)
+        
+        (set "y" (+ $y 1))
+    ))
+    (set "x" (+ $x 1))
+    (set "y" 0)
+    (print "")
+));

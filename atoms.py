@@ -75,9 +75,10 @@ class Printer(Node):
     expected_args_len = 1
 
     def __call__(self, variables):
-        if len(self.nodes) != type(self).expected_args_len + 1:
-            raise RuntimeError('print function takes exactly 1 argument')
-        print(self.nodes[1](variables))
+        to_print = self.nodes[1](variables).format(
+            *[node(variables) for node in self.nodes[2:len(self.nodes)]]
+        )
+        print(to_print)
 
 
 class If(Node):
@@ -125,8 +126,9 @@ class Not(Node):
     name = '!'
 
     def __call__(self, variables):
-        assert self.nodes[1](variables) is True or self.nodes[1](variables) is False
-        return not self.nodes[1](variables)
+        val = self.nodes[1](variables)
+        assert (val is True) or (val is False)
+        return not val
 
 
 class Int(Node):
@@ -160,7 +162,7 @@ class Setter(Node):
 
 
 class Exelist(Node):
-    name = 'exelist'
+    name = '{'
 
     def __call__(self, variables):
         for node in self.nodes:

@@ -6,6 +6,9 @@ from atoms import *
 NICHT = '('
 BACK = ')'
 
+COMMENT_PREFIX = '#'
+assert len(COMMENT_PREFIX) == 1
+
 
 def is_whitespace(s):
     for c in s:
@@ -17,9 +20,9 @@ def is_whitespace(s):
 def is_comment(s):
     found_hash = False
     for c in s:
-        if not found_hash and c != '#' and c != ' ':
+        if not found_hash and c != COMMENT_PREFIX and c != ' ':
             return False
-        if c == '#':
+        if c == COMMENT_PREFIX:
             found_hash = True
     return True
 
