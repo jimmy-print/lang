@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import colorama
 from atoms import *
 
 NICHT = '('
@@ -128,7 +129,7 @@ def get_tokens(s):
 def get_tree(tokens):
     tree = Root('ROOT', None)
 
-    on_tok = tree.get(0)
+    on_tok = index(tree, 0)
 
     II = -1
     for i, tok in enumerate(tokens):
@@ -156,7 +157,7 @@ def get_tree(tokens):
                 on_tok.add(Thing(tok, None))
 
         if tok == NICHT:
-            on_tok = tree.get(II + 1)
+            on_tok = index(tree, II + 1)
 
     return tree
 
@@ -178,6 +179,10 @@ if __name__ == '__main__':
 
     variables = {}
 
+    [print(colorama.Fore.CYAN + '\n'+expr, end='') for expr in exprs]
+    print(colorama.Style.RESET_ALL)
+    print('----\n')
+
     for line in exprs:
         if is_whitespace(line) or is_comment(line):
             continue
@@ -189,5 +194,16 @@ if __name__ == '__main__':
             if not is_whitespace(tok):
                 toktok.append(tok)
 
+        #print(toktok)
         tree = get_tree(toktok)
+
+        #vis_recursive(tree)
+        #Node.vis_with_stack(tree)
+        
+        #print(get_vis_stack_str(tree))
+        
+        
         tree(variables)
+        #Node.evaluate(tree, root=True)
+
+        #print()
