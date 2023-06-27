@@ -74,6 +74,10 @@ def index(root_node, i):
     raise IndexError('tree index not found (out of range?)')
 
 
+def do(root_node):
+    print(get_vis_stack_str(root_node))
+
+
 class Node:  # aka Function
     def __init__(self, v, parent):
         self.v = v

@@ -38,12 +38,11 @@ def is_int(v):
 
 def is_str(v):
     """
-    Check if a token is a string in Lang.
-    :param v: a Lang token. for instance, "add" or "'word'".
-    
-    :returns: True if the token is a Lang string, i.e. surrounded by double quotes. False if not.
+    Check if a token is a string in 
     """
-    # TODO allow either double quotes or single quotes.
+    # not that v can be converted into a string type,
+    # but that it is literally a string in the code file
+    # (set name "john")
     if v[0] == '"' and v[-1] == '"':
         return True
     return False

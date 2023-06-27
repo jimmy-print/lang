@@ -22,4 +22,3 @@
 
 (if (= $isprime 1) ({ (print "number-is-prime")));
 (if (= $isprime 0) ({ (print "number-is-not-prime")));
-
