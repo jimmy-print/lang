@@ -1,5 +1,5 @@
-import ll
-from ll import *
+import lang
+from lang import *
 import unittest
 
 class TestGetTree(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestGetTree(unittest.TestCase):
 
     def test_all_lines(self):
         for expr in self.tests:
-            result = ll.get_tree(ll.get_tokens(expr))({})
+            result = lang.get_tree(lang.get_tokens(expr))({})
             #print(f'expr: {expr}, result: {result}')
             self.assertEqual(result, self.tests[expr])
 
@@ -55,6 +55,20 @@ class CompareRecursiveToStack(unittest.TestCase):
     def test_thru_same(self):
         for tree in self.trees:
             self.assertEqual(list(thru(tree)), list(Node._thru(tree, in_testing=True)))
+
+class TestDo(unittest.TestCase):
+    def setUp(self):
+        self.tests = {
+            '(* (* 3 4) (* 2 3) 3 4 5 6 7)': 181440,
+            '(* (* (* (* 1 2 3) 1 (/ 45 (+ 1 2 3))) 4 5) (+ 2 3))': 4500,
+            '(/ (/ (+ (- (* 2 3 (- 4 5)) (* 1 2 3)) (+ 1 2)) 2) 3)': -1.5
+        }
+
+    def test_all_lines(self):
+        for expr in self.tests:
+            result = lang.do(lang.get_tree(lang.get_tokens(expr)))
+            #print(f'expr: {expr}, result: {result}')
+            self.assertEqual(result, self.tests[expr])
 
 if __name__ == '__main__':
     unittest.main()

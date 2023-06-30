@@ -3,12 +3,13 @@ import colorama
 INDEX_TOO_BIG = 'INDEX_TOO_BIG'
 NO_NODES = 'NO_NODES'
 
+DEPTH_CHAR = '_'
+
 def dupe(s, n):
     out = []
     for _ in range(n):
         out += s
     return ''.join(out)
-
 
 def _get_with_stack(root_node, stack):
     node = root_node
@@ -44,7 +45,7 @@ def thru_giving_depth(root_node):
 def get_vis_stack_str(root_node):
     out = []
     for elem in thru_giving_depth(root_node):
-        out.append('|'+dupe('-', elem[0])+str(elem[1].v)+'\n')
+        out.append('|'+dupe(DEPTH_CHAR, elem[0])+str(elem[1].v)+'\n')
     return ''.join(out)
 
 
@@ -54,20 +55,19 @@ def get_vis_recursive_str(node, layer=0, in_testing=False):
         raise DeprecationWarning('Do not use recursive functions.')
     def __(node, layer=0):
         if layer == 0:
-            yield'|' + dupe('-', layer) + str(node.v) + '\n'
+            yield'|' + dupe(DEPTH_CHAR, layer) + str(node.v) + '\n'
 
         for NODE in node.nodes:
-            yield '|' + dupe('-', layer + 1) + str(NODE.v) + '\n'
+            yield '|' + dupe(DEPTH_CHAR, layer + 1) + str(NODE.v) + '\n'
             yield from __(NODE, layer + 1)
     return ''.join(__(node, 0))
 
 
 def thru(root_node):
-        for elem in thru_giving_depth(root_node):
-            yield elem[1]
+    for elem in thru_giving_depth(root_node):
+        yield elem[1]
 
 def index(root_node, i):
-
     for ii, node in enumerate(thru(root_node)):
         if ii == i:
             return node
@@ -75,8 +75,80 @@ def index(root_node, i):
 
 
 def do(root_node):
-    print(get_vis_stack_str(root_node))
+    elems = list(thru_giving_depth(root_node))
+    elems.pop(0)
 
+    def _remove_useless_Thing_first_nodes(root_node):
+        past_layer = 1
+        for i, elem in enumerate(elems):
+            if i == 0 or len(elems[i - 1][1].nodes) == 0:
+                if len(elem[1].nodes) > 0:
+                    elem[1].v = elems[i + 1][1].v
+                yield elem
+    elems = list(_remove_useless_Thing_first_nodes(elems))
+    def _visualise(iterator):
+        out = []
+        for elem in iterator:
+            out.append('|' + dupe(DEPTH_CHAR, elem[0]) + str(elem[1].v) + '\n')
+        return ''.join(out)
+    print(_visualise(elems))
+
+    def get_function(c):
+        if c == '+':
+            return sum
+        elif c == '-':
+            def _subtract(iterable):
+                if len(iterable) != 2:
+                    raise TypeError('subtraction is done on 2 numbers.')
+                return iterable[0] - iterable[1]
+            return _subtract
+        elif c == '*':
+            def _multiply(iterable):
+                result = 1
+                for arg in iterable:
+                    result *= arg
+                return result
+            return _multiply
+        elif c == '/':
+            def _divide(iterable):
+                if len(iterable) != 2:
+                    raise TypeError('division is done on 2 numbers.')
+                return iterable[0] / iterable[1]
+            return _divide
+
+    stack = []
+    past_layer = 0
+    for elem in elems:
+        if elem[0] > past_layer:
+            if past_layer == 0:
+                stack = [[elems[0][1], []]]
+            else:
+                stack[-1][1].append(elem[1])
+                stack.append([elem[1], []]) if type(elem[1]) is not Thing else None
+        elif elem[0] == past_layer:
+            stack[-1][1].append(elem[1])
+            stack.append([elem[1], []]) if type(elem[1]) is not Thing else None
+
+        elif elem[0] < past_layer:
+            gap = past_layer - elem[0]
+            for _ in range(gap):
+                s = get_function(stack[-1][0].v)([(elem.v if type(elem) is Thing else elem) for elem in stack[-1][1]])
+                stack.pop()
+                stack[-1][1][-1] = s
+
+                if _ == gap - 1:
+                    stack[-1][1].append(elem[1])
+                    stack.append([elem[1], []]) if type(elem[1]) is not Thing else None
+        past_layer = elem[0]
+
+    gap = past_layer - 1
+    for _ in range(gap):
+        s = get_function(stack[-1][0].v)([(elem.v if type(elem) is Thing else elem) for elem in stack[-1][1]])
+        stack.pop()
+        if _ != gap - 1:
+            stack[-1][1][-1] = s
+
+    return s
 
 class Node:  # aka Function
     def __init__(self, v, parent):
@@ -85,7 +157,8 @@ class Node:  # aka Function
         self.parent = parent
 
     def __repr__(self):
-        return f'val: {self.v}, type: {type(self)}'
+        # return f'**{self.v}, {str(type(self))}**'
+        return f'{self.v}'
 
     def add(self, v):
         v.parent = self
@@ -263,4 +336,12 @@ class VarOther(Node):
     def __call__(self, variables):
         return variables[self.nodes[1].v]
 
-functions = Adder, Subtracter, Printer, Exelist, If, Equals, Input, Setter, Not, Int, Modulo, While, Lesser, VarOther
+functions = [Adder, Subtracter, Printer, Exelist, If, Equals, Input, Setter, Not, Int, Modulo, While, Lesser, VarOther]
+class Multiplier(Node):
+    name = '*'
+
+class Divisor(Node):
+        name = '/'
+
+functions.append(Multiplier)
+functions.append(Divisor)

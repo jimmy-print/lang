@@ -38,7 +38,9 @@ def is_int(v):
 
 def is_str(v):
     """
-    Check if a token is a string in 
+    Check if a token is a string in Lang.
+    :param s: A token, e.g. '(', '"name"', '12'.
+    :returns: True if 
     """
     # not that v can be converted into a string type,
     # but that it is literally a string in the code file
@@ -210,13 +212,8 @@ if __name__ == '__main__':
         #vis_recursive(tree)
         #Node.vis_with_stack(tree)
         
-        #print(get_vis_stack_str(tree))
-        
-        
         #tree(variables)
-        #do(tree)
-        print(
-            atoms._get_with_stack(tree, [0])
-        )
+
+        print(do(tree))
 
         #print()
