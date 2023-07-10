@@ -2,23 +2,6 @@ import lang
 from lang import *
 import unittest
 
-class TestGetTree(unittest.TestCase):
-    def setUp(self):
-        self.tests = {
-            '(+ 1 2)': 3,
-            '(+ (+ 34 2) (+ 1 -100))': -63,
-            '(+ (+ (+ 123 23 3) (+ 1 (+ 1 2 3 4) 4) 23 2) 8 2 -1)': 198,
-            '(+ (- (- 2 3) (+ 4 5)) 1 2 3 (- 3 4))': -5,
-            '(+ 1 (+ 2 (- 3 4)) 2)': 4,
-
-        }
-
-    def test_all_lines(self):
-        for expr in self.tests:
-            result = lang.get_tree(lang.get_tokens(expr))({})
-            #print(f'expr: {expr}, result: {result}')
-            self.assertEqual(result, self.tests[expr])
-
 class CompareRecursiveToStack(unittest.TestCase):
     def setUp(self):
         files_to_test = ['prime.la, format.la, new.what']

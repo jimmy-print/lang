@@ -1,9 +1,10 @@
-import colorama
+from copy import deepcopy
 
 INDEX_TOO_BIG = 'INDEX_TOO_BIG'
 NO_NODES = 'NO_NODES'
 
 DEPTH_CHAR = '_'
+
 
 def dupe(s, n):
     out = []
@@ -11,7 +12,7 @@ def dupe(s, n):
         out += s
     return ''.join(out)
 
-def _get_with_stack(root_node, stack):
+def get_with_stack(root_node, stack):
     node = root_node
     for i in stack:
         if i >= len(node.nodes) and len(node.nodes) > 0:
@@ -25,17 +26,17 @@ def thru_giving_depth(root_node):
     yield (0, root_node)
     stack = [0]
     while True:
-        node = _get_with_stack(root_node, stack)
+        node = get_with_stack(root_node, stack)
         yield (len(stack), node)
 
         stack.append(0)
-        if issubclass(type(_get_with_stack(root_node, stack)), Node):
+        if issubclass(type(get_with_stack(root_node, stack)), Node):
             continue
-        elif _get_with_stack(root_node, stack) == NO_NODES:
+        elif get_with_stack(root_node, stack) == NO_NODES:
             stack.pop()
 
         stack[-1] += 1
-        while _get_with_stack(root_node, stack) == INDEX_TOO_BIG and stack != [1]:
+        while get_with_stack(root_node, stack) == INDEX_TOO_BIG and stack != [1]:
             stack.pop()
             stack[-1] += 1
 
@@ -74,95 +75,185 @@ def index(root_node, i):
     raise IndexError('tree index not found (out of range?)')
 
 
+def get_function(c):
+    if c == '+':
+        return sum
+    elif c == '-':
+        def _subtract(iterable):
+            if len(iterable) != 2:
+                raise TypeError('subtraction is done on 2 numbers.')
+            return iterable[0] - iterable[1]
+        return _subtract
+    elif c == '*':
+        def _multiply(iterable):
+            result = 1
+            for arg in iterable:
+                result *= arg
+            return result
+        return _multiply
+    elif c == '/':
+        def _divide(iterable):
+            if len(iterable) != 2:
+                raise TypeError('division is done on 2 numbers.')
+            return iterable[0] / iterable[1]
+        return _divide
+    elif c == 'print':
+        def _print(iterable):
+            format_string = iterable[0]
+            print(format_string.format(*iterable[1:]))
+            return None
+        return _print
+    elif c == '=':
+        return lambda iterable: iterable[0] == iterable[1]
+    elif c == 'input':
+        def _input(iterable):
+            format_string = iterable[0]
+            return input(format_string.format(*iterable[1:]))
+        return _input
+
+    elif c == 'if':
+        return lambda iterable: None
+
+    print(f'===LANG ERROR: Your function \'{c}\' is not implemented.===')
+    exit(1)
+
+
 def do(root_node):
-    elems = list(thru_giving_depth(root_node))
-    elems.pop(0)
+    elems_with_OPENING_BRACKET = list(thru_giving_depth(root_node))
+    elems_with_OPENING_BRACKET.pop(0)
 
-    def _remove_useless_Thing_first_nodes(root_node):
-        past_layer = 1
-        for i, elem in enumerate(elems):
-            if i == 0 or len(elems[i - 1][1].nodes) == 0:
-                if len(elem[1].nodes) > 0:
-                    elem[1].v = elems[i + 1][1].v
-                yield elem
-    elems = list(_remove_useless_Thing_first_nodes(elems))
-    def _visualise(iterator):
-        out = []
-        for elem in iterator:
-            out.append('|' + dupe(DEPTH_CHAR, elem[0]) + str(elem[1].v) + '\n')
-        return ''.join(out)
-    print(_visualise(elems))
+    # Restructure elems to be without OPENING_BRACKET.
+    # (
+    #  +
+    #  1
+    #  2
+    # becomes..
+    # +
+    #  1
+    #  2
+    # Note that the operation is being done on the 2D list form of these ASTs,
+    # not on the node objects themselves.
+    elems = []
+    for i, elem in enumerate(elems_with_OPENING_BRACKET):
+        if i == 0 or len(elems_with_OPENING_BRACKET[i - 1][1].nodes) == 0:
+            if len(elem[1].nodes) > 0:
+                elem[1].v = elems_with_OPENING_BRACKET[i + 1][1].v
+            elems.append(elem)
 
-    def get_function(c):
-        if c == '+':
-            return sum
-        elif c == '-':
-            def _subtract(iterable):
-                if len(iterable) != 2:
-                    raise TypeError('subtraction is done on 2 numbers.')
-                return iterable[0] - iterable[1]
-            return _subtract
-        elif c == '*':
-            def _multiply(iterable):
-                result = 1
-                for arg in iterable:
-                    result *= arg
-                return result
-            return _multiply
-        elif c == '/':
-            def _divide(iterable):
-                if len(iterable) != 2:
-                    raise TypeError('division is done on 2 numbers.')
-                return iterable[0] / iterable[1]
-            return _divide
-
-    stack = []
-    past_layer = 0
-    for elem in elems:
+    # Reconstruct an AST, after restructuring the elems to not have OPENING_BRACKET nodes.
+    tree = Node('ROOT', None)
+    tree.add(Node(elems[0][1].v, None))
+    node = tree.nodes[0]
+    past_layer = elems[0][0]
+    for elem in elems[1:]:
         if elem[0] > past_layer:
-            if past_layer == 0:
-                stack = [[elems[0][1], []]]
-            else:
-                stack[-1][1].append(elem[1])
-                stack.append([elem[1], []]) if type(elem[1]) is not Thing else None
+            new_node = Node(elem[1].v, None)
+            node.add(new_node)
         elif elem[0] == past_layer:
-            stack[-1][1].append(elem[1])
-            stack.append([elem[1], []]) if type(elem[1]) is not Thing else None
-
+            new_node = Node(elem[1].v, None)
+            node.parent.add(new_node)
         elif elem[0] < past_layer:
             gap = past_layer - elem[0]
+            new_node = Node(elem[1].v, None)
             for _ in range(gap):
-                s = get_function(stack[-1][0].v)([(elem.v if type(elem) is Thing else elem) for elem in stack[-1][1]])
-                stack.pop()
-                stack[-1][1][-1] = s
-
-                if _ == gap - 1:
-                    stack[-1][1].append(elem[1])
-                    stack.append([elem[1], []]) if type(elem[1]) is not Thing else None
+                node = node.parent
+            node.parent.add(new_node)
+        node = new_node
         past_layer = elem[0]
 
-    gap = past_layer - 1
-    for _ in range(gap):
-        s = get_function(stack[-1][0].v)([(elem.v if type(elem) is Thing else elem) for elem in stack[-1][1]])
-        stack.pop()
-        if _ != gap - 1:
-            stack[-1][1][-1] = s
+    # Execute on the AST.
+    stack = [0]
+    stop = False
+    while not stop:
+        stack.append(0)
+        if issubclass(type(get_with_stack(tree, stack)), Node):
+            continue
+        elif get_with_stack(tree, stack) == NO_NODES:
+            stack.pop()
 
-    return s
+        stack[-1] += 1
 
-class Node:  # aka Function
+        while get_with_stack(tree, stack) == INDEX_TOO_BIG and stack != [1]:
+            last_arg_node_stack = list(stack)
+            last_arg_node_stack[-1] -= 1
+
+            last_arg_node = get_with_stack(tree, last_arg_node_stack)
+            parent_func_node = last_arg_node.parent
+
+            f = get_function(parent_func_node.v)
+
+            for node in parent_func_node.nodes:
+                assert len(node.nodes) == 0
+
+            args = [node.v for node in parent_func_node.nodes]
+
+            # Find the parent ifs, if there are any.
+            if_nodes = []
+            st = deepcopy(last_arg_node_stack)
+            st.pop()
+            while get_with_stack(tree, st).v != 'ROOT':
+                n = get_with_stack(tree, st)
+                if n.v == 'if' and n is not parent_func_node:
+                    # TODO figure out whether object comparison should be done with == or is.
+                    if_nodes.append((list(st), n))
+                st.pop()
+
+            # Determine if the current parent_func_node is part of the first
+            # argument of its closest IF parent.
+            parent_func_node_stack = list(last_arg_node_stack)
+            parent_func_node_stack.pop()
+
+            is_base = None
+            is_first_arg = None
+
+            if not if_nodes:
+                is_base = True
+            else:
+                closest_if_stack = list(if_nodes[0][0])
+                closest_if_arg_one_stack = list(closest_if_stack)
+                closest_if_arg_one_stack.append(0)
+
+                for i, elem in enumerate(closest_if_arg_one_stack):
+                    if elem != parent_func_node_stack[i]:
+                        is_first_arg = False
+                        break
+                else:
+                    is_first_arg = True
+
+            if is_base or is_first_arg:
+                r = f(args)
+            else:
+                all_true = all(elem[1].nodes[0].v for elem in if_nodes)
+                if all_true:
+                    r = f(args)
+                else:
+                    r = None
+
+            parent_func_node.v = r
+            parent_func_node.nodes = []
+
+            stack.pop()
+            stack[-1] += 1
+
+        if stack == [1]:
+            stop = True
+
+    assert len(tree.nodes) == 1
+    return tree.nodes[0].v
+
+class Node:
     def __init__(self, v, parent):
+        assert type(v) != Node and type(v) != Data
         self.v = v
         self.nodes = []
         self.parent = parent
 
     def __repr__(self):
-        # return f'**{self.v}, {str(type(self))}**'
-        return f'{self.v}'
+        return f' *{self.v}, {type(self)}* '
 
-    def add(self, v):
-        v.parent = self
-        self.nodes.append(v)
+    def add(self, n):
+        n.parent = self
+        self.nodes.append(n)
 
     @staticmethod
     def _thru(n, in_testing=False):
@@ -181,167 +272,4 @@ class Node:  # aka Function
                 return node
         raise IndexError('tree index not found (out of range?)')
 
-
-class Thing(Node):
-    def __call__(self, variables):
-        return self.v
-
-
-class Modulo(Node):
-    name = '%'
-
-    def __call__(self, variables):
-        return self.nodes[1](variables) % self.nodes[2](variables)
-
-class Adder(Node):
-    # the name class field is the function name.
-    # add function must thus be called by (add x y z ...)
-    name = '+'
-
-    def __call__(self, variables):
-        out = 0
-        for i, node in enumerate(self.nodes[1:len(self.nodes)]):
-            val = node(variables)
-            if type(val) != str:
-                out += val
-            else:
-                raise ValueError(f'argument #{i} to add function does not return int')
-        return out
-
-
-class Subtracter(Node):
-    name = '-'
-    expected_args_len = 2
-
-    def __call__(self, variables):
-        if len(self.nodes) != type(
-                self).expected_args_len + 1:  # + 1, because the nodes include the function name as a string
-            raise RuntimeError('sub function takes exactly two arguments')
-        return self.nodes[1](variables) - self.nodes[2](variables)
-
-
-class Printer(Node):
-    name = 'print'
-    expected_args_len = 1
-
-    def __call__(self, variables):
-        to_print = self.nodes[1](variables).format(
-            *[node(variables) for node in self.nodes[2:len(self.nodes)]]
-        )
-        print(to_print)
-
-
-class If(Node):
-    name = 'if'
-
-    def __call__(self, variables):
-        assert type(self.nodes[2]) == Exelist
-
-        if self.nodes[1](variables) is True:
-            self.nodes[2](variables)
-
-
-class While(Node):
-    name = 'while'
-
-    def __call__(self, variables):
-        assert type(self.nodes[2]) == Exelist
-
-        while self.nodes[1](variables) is True:
-            self.nodes[2](variables)
-
-
-class Equals(Node):
-    name = '='
-
-    def __call__(self, variables):
-        if self.nodes[1](variables) == self.nodes[2](variables):
-            return True
-        return False
-
-
-class Lesser(Node):
-    name = '<'
-
-    def __call__(self, variables):
-        val0 = self.nodes[1](variables)
-        val1 = self.nodes[2](variables)
-
-        assert type(val0) == int and type(val1) == int
-
-        return val0 < val1
-
-
-class Not(Node):
-    name = '!'
-
-    def __call__(self, variables):
-        val = self.nodes[1](variables)
-        assert (val is True) or (val is False)
-        return not val
-
-
-class Int(Node):
-    name = 'int'
-
-    def __call__(self, variables):
-        return int(self.nodes[1](variables))
-
-
-class Input(Node):
-    name = 'input'
-
-    def __call__(self, variables):
-        return input(self.nodes[1](variables))
-
-
-class Variable:
-    def __init__(self, s):
-        assert type(s) == str
-        self.v = s
-        self.nodes = []
-
-    def __call__(self, variables):
-        return variables[self.v]
-    
-    def __repr__(self):
-        return f'val: {self.v}, type: {type(self)}'
-    
-
-class Setter(Node):
-    name = 'set'
-
-    def __call__(self, variables):
-        variables[self.nodes[1](variables)] = self.nodes[2](variables)
-
-
-class Exelist(Node):
-    name = '{'
-
-    def __call__(self, variables):
-        for node in self.nodes:
-            node(variables)
-            # TODO: implement returning
-
-
-class Root(Node):
-    # returns the return value of its first node. it should only have one son node.
-    def __call__(self, variables):
-        assert len(self.nodes) == 1
-        return self.nodes[0](variables)
-    
-class VarOther(Node):
-    name = 'var'
-
-    def __call__(self, variables):
-        return variables[self.nodes[1].v]
-
-functions = [Adder, Subtracter, Printer, Exelist, If, Equals, Input, Setter, Not, Int, Modulo, While, Lesser, VarOther]
-class Multiplier(Node):
-    name = '*'
-
-class Divisor(Node):
-        name = '/'
-
-functions.append(Multiplier)
-functions.append(Divisor)
+class Data(Node): pass

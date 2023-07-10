@@ -5,8 +5,8 @@ import colorama
 import atoms
 from atoms import *
 
-NICHT = '('
-BACK = ')'
+OPENING_BRACKET = '('
+CLOSING_BRACKET = ')'
 
 COMMENT_PREFIX = '#'
 assert len(COMMENT_PREFIX) == 1
@@ -87,13 +87,6 @@ def compress_whitespace(s: str):
     return ''.join(out)
 
 
-def get_appropriate_function_class(tok):
-    for function in functions:
-        if tok == function.name:
-            return function
-    raise RuntimeError(f'{tok} function not found')
-
-
 def get_tokens(s):
     split = s.strip().split()
 
@@ -129,8 +122,8 @@ def get_tokens(s):
 
     outout = []
     for tok in out:
-        if NICHT in tok:
-            outout.append(NICHT)
+        if OPENING_BRACKET in tok:
+            outout.append(OPENING_BRACKET)
             outout.append(tok[1:len(tok)])
         else:
             outout.append(tok)
@@ -139,14 +132,14 @@ def get_tokens(s):
 
 
 def get_tree(tokens):
-    tree = Root('ROOT', None)
+    tree = Node('ROOT', None)
 
     on_tok = index(tree, 0)
 
     II = -1
     for i, tok in enumerate(tokens):
         II += 1
-        if tok == BACK:
+        if tok == CLOSING_BRACKET:
             # now we change on_tok to the nicht above the on_tok
             on_tok = on_tok.parent
 
@@ -154,21 +147,19 @@ def get_tree(tokens):
 
             continue
 
-        if tok == NICHT:
-            # scan the one forward tok to determine appropriate function
-            function_class = get_appropriate_function_class(tokens[i + 1])
-            on_tok.add(function_class(tok, None))
+        if tok == OPENING_BRACKET:
+            on_tok.add(Node(tok, None))
         else:
             if is_int(tok):
-                on_tok.add(Thing(int(tok), None))
+                on_tok.add(Data(int(tok), None))
             elif is_str(tok):
-                on_tok.add(Thing(str(tok.strip('"')), None))
+                on_tok.add(Data(str(tok.strip('"')), None))
             elif tok[0] == '$':
-                on_tok.add(Variable(tok[1:len(tok)]))
+                on_tok.add(Node(tok[1:len(tok)], None))
             else:
-                on_tok.add(Thing(tok, None))
+                on_tok.add(Node(tok, None))
 
-        if tok == NICHT:
+        if tok == OPENING_BRACKET:
             on_tok = index(tree, II + 1)
 
     return tree
@@ -206,14 +197,6 @@ if __name__ == '__main__':
             if not is_whitespace(tok):
                 toktok.append(tok)
 
-        #print(toktok)
         tree = get_tree(toktok)
 
-        #vis_recursive(tree)
-        #Node.vis_with_stack(tree)
-        
-        #tree(variables)
-
-        print(do(tree))
-
-        #print()
+        print(f'Top-level return: {do(tree)}')
