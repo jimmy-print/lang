@@ -1,6 +1,7 @@
 import lang
 from lang import *
 import unittest
+import atoms
 
 class CompareRecursiveToStack(unittest.TestCase):
     def setUp(self):
@@ -39,7 +40,7 @@ class CompareRecursiveToStack(unittest.TestCase):
         for tree in self.trees:
             self.assertEqual(list(thru(tree)), list(Node._thru(tree, in_testing=True)))
 
-class TestDo(unittest.TestCase):
+class TestCalculatorStyleExpressionEvaluation(unittest.TestCase):
     def setUp(self):
         self.tests = {
             '(* (* 3 4) (* 2 3) 3 4 5 6 7)': 181440,
@@ -52,6 +53,68 @@ class TestDo(unittest.TestCase):
             result = lang.do(lang.get_tree(lang.get_tokens(expr)))
             #print(f'expr: {expr}, result: {result}')
             self.assertEqual(result, self.tests[expr])
+
+def reset_vardict_and_run_expr(expr):
+    atoms.global_variables = {}
+    return do(get_tree(get_tokens(expr)))
+
+class TestVariables(unittest.TestCase):
+    def test_value_exists_and_is_equal(self):
+        reset_vardict_and_run_expr('(set "a" 1)')
+        self.assertDictEqual(
+            atoms.global_variables,
+            {'a': 1}
+        )
+
+    def test_value_can_be_changed(self):
+        reset_vardict_and_run_expr('(set "a" 1)')
+        reset_vardict_and_run_expr('(set "a" 2)')
+        self.assertDictEqual(
+            atoms.global_variables,
+            {'a': 2}
+        )
+
+    def test_int_value_can_be_read(self):
+        reset_vardict_and_run_expr('(set "a" 1)')
+        res = do(get_tree(get_tokens('($ "a")')))
+        self.assertEqual(res, 1)
+
+    def test_str_value_can_be_read(self):
+        reset_vardict_and_run_expr('(set "a" "b")')
+        res = do(get_tree(get_tokens('($ "a")')))
+        self.assertEqual(res, "b")
+
+
+class TestIf(unittest.TestCase):
+    def test_positive(self):
+        reset_vardict_and_run_expr('''
+(if 1
+    (set "a" 1))''')
+        self.assertDictEqual(atoms.global_variables, {'a': 1})
+
+    def test_negative(self):
+        reset_vardict_and_run_expr('''
+(if 0
+    (set "a" 1))''')
+        self.assertDictEqual(atoms.global_variables, {})
+
+    def test_nested(self):
+        reset_vardict_and_run_expr('''
+(if 1
+    (if 1
+        (set "a" 1)))''')
+        self.assertDictEqual(atoms.global_variables, {'a': 1})
+        reset_vardict_and_run_expr('''
+(if 1
+    (if 0
+        (set "a" 1)))''')
+        self.assertDictEqual(atoms.global_variables, {})
+        reset_vardict_and_run_expr('''
+(if 0
+    (if 1
+        (set "a" 1)))''')
+        self.assertDictEqual(atoms.global_variables, {})
+
 
 if __name__ == '__main__':
     unittest.main()

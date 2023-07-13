@@ -3,6 +3,7 @@
 #include <string>
 
 const std::string DOWN = "DOWN";
+const std::string UP = "UP";
 
 class node {
 public:

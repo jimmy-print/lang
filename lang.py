@@ -2,7 +2,6 @@
 
 import sys
 import colorama
-import atoms
 from atoms import *
 
 OPENING_BRACKET = '('
@@ -132,7 +131,7 @@ def get_tokens(s):
 
 
 def get_tree(tokens):
-    tree = Node('ROOT', None)
+    tree = Root()
 
     on_tok = index(tree, 0)
 
@@ -151,11 +150,9 @@ def get_tree(tokens):
             on_tok.add(Node(tok, None))
         else:
             if is_int(tok):
-                on_tok.add(Data(int(tok), None))
+                on_tok.add(Node(int(tok), None))
             elif is_str(tok):
-                on_tok.add(Data(str(tok.strip('"')), None))
-            elif tok[0] == '$':
-                on_tok.add(Node(tok[1:len(tok)], None))
+                on_tok.add(Node(str(tok.strip('"')), None))
             else:
                 on_tok.add(Node(tok, None))
 
@@ -164,13 +161,39 @@ def get_tree(tokens):
 
     return tree
 
+'''
+def repl():
+    try:
+        print('Welcome to the Lang interpreter!')
+        while True:
+            get = input('$ ')
+            if is_whitespace(get) or is_comment(get):
+                continue
+            tokens = get_tokens(get)
+            toktok = []
+            for tok in tokens:
+                if not is_whitespace(tok):
+                    toktok.append(tok)
+
+            tree = get_tree(toktok)
+            print(do(tree))
+
+    except EOFError:
+        print()
+        return
+    except KeyboardInterrupt:
+        print()
+        return
+'''
+
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         filename = sys.argv[1]
     else:
-        print('please provide filename')
-        exit()
+        #repl()
+        exit(0)
 
     with open(filename) as f:
         s = f.read().strip()
@@ -179,8 +202,6 @@ if __name__ == '__main__':
     for S in s.split(';'):
         if not is_whitespace(S):
             exprs.append(compress_whitespace(chomp(S.strip(), '\n')))
-
-    variables = {}
 
     [print(colorama.Fore.CYAN + '\n'+expr, end='') for expr in exprs]
     print(colorama.Style.RESET_ALL)

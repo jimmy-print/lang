@@ -1,10 +1,14 @@
 from copy import deepcopy
+import types
 
 INDEX_TOO_BIG = 'INDEX_TOO_BIG'
 NO_NODES = 'NO_NODES'
 
 DEPTH_CHAR = '_'
 
+ROOT = 'ROOT'
+
+global_variables = {}
 
 def dupe(s, n):
     out = []
@@ -76,46 +80,63 @@ def index(root_node, i):
 
 
 def get_function(c):
-    if c == '+':
-        return sum
-    elif c == '-':
-        def _subtract(iterable):
-            if len(iterable) != 2:
-                raise TypeError('subtraction is done on 2 numbers.')
-            return iterable[0] - iterable[1]
-        return _subtract
-    elif c == '*':
-        def _multiply(iterable):
-            result = 1
-            for arg in iterable:
-                result *= arg
-            return result
-        return _multiply
-    elif c == '/':
-        def _divide(iterable):
-            if len(iterable) != 2:
-                raise TypeError('division is done on 2 numbers.')
-            return iterable[0] / iterable[1]
-        return _divide
-    elif c == 'print':
-        def _print(iterable):
-            format_string = iterable[0]
-            print(format_string.format(*iterable[1:]))
-            return None
-        return _print
-    elif c == '=':
-        return lambda iterable: iterable[0] == iterable[1]
-    elif c == 'input':
-        def _input(iterable):
-            format_string = iterable[0]
-            return input(format_string.format(*iterable[1:]))
-        return _input
+    plus = sum
+    def minus(iterable):
+        if len(iterable) != 2:
+            raise TypeError('subtraction is done on 2 numbers.')
+        return iterable[0] - iterable[1]
+    def multiply(iterable):
+        result = 1
+        for arg in iterable:
+            result *= arg
+        return result
+    def divide(iterable):
+        if len(iterable) != 2:
+            raise TypeError('division is done on 2 numbers.')
+        return iterable[0] / iterable[1]
+    equals = lambda iterable: iterable[0] == iterable[1]
 
-    elif c == 'if':
-        return lambda iterable: None
+    def print_(iterable):
+        format_string = iterable[0]
+        print(format_string.format(*iterable[1:]))
+        return None
+    def input_(iterable):
+        format_string = iterable[0]
+        return input(format_string.format(*iterable[1:]))
 
-    print(f'===LANG ERROR: Your function \'{c}\' is not implemented.===')
-    exit(1)
+    if_ = lambda iterable: None
+
+    def set(iterable):
+        global_variables[iterable[0]] = iterable[1]
+    def get(iterable):
+        return global_variables[iterable[0]]
+
+    int_ = lambda iterable: int(iterable[0])
+
+    name_to_function = {
+        '+': plus,
+        '-': minus,
+        '*': multiply,
+        '/': divide,
+        '=': equals,
+        'print': print_,
+        'input': input_,
+        'if': if_,
+        'set': set,
+        '$': get,
+        'int': int_
+    }
+
+    for expected_function in name_to_function.values():
+        assert isinstance(expected_function,(types.FunctionType, types.BuiltinFunctionType))
+
+    try:
+        function = name_to_function[c]
+    except KeyError:
+        print(f'===LANG ERROR: The function \'{c}\' is not implemented.===')
+        exit(1)
+    else:
+        return function
 
 
 def do(root_node):
@@ -141,7 +162,7 @@ def do(root_node):
             elems.append(elem)
 
     # Reconstruct an AST, after restructuring the elems to not have OPENING_BRACKET nodes.
-    tree = Node('ROOT', None)
+    tree = Root()
     tree.add(Node(elems[0][1].v, None))
     node = tree.nodes[0]
     past_layer = elems[0][0]
@@ -191,7 +212,7 @@ def do(root_node):
             if_nodes = []
             st = deepcopy(last_arg_node_stack)
             st.pop()
-            while get_with_stack(tree, st).v != 'ROOT':
+            while get_with_stack(tree, st).v != ROOT:
                 n = get_with_stack(tree, st)
                 if n.v == 'if' and n is not parent_func_node:
                     # TODO figure out whether object comparison should be done with == or is.
@@ -241,10 +262,15 @@ def do(root_node):
     assert len(tree.nodes) == 1
     return tree.nodes[0].v
 
+
 class Node:
     def __init__(self, v, parent):
-        assert type(v) != Node and type(v) != Data
+        assert type(v) != Node
+        # Each node may contain other node objects in its self.nodes list.
+        # However, their values should not be node objects. They should be
+        # function names, numbers, strings, or booleans.
         self.v = v
+
         self.nodes = []
         self.parent = parent
 
@@ -272,4 +298,6 @@ class Node:
                 return node
         raise IndexError('tree index not found (out of range?)')
 
-class Data(Node): pass
+class Root(Node):
+    def __init__(self):
+        super().__init__(ROOT, None)
