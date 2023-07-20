@@ -10,6 +10,8 @@ ROOT = 'ROOT'
 
 global_variables = {}
 
+class LangError(Exception): pass
+
 def dupe(s, n):
     out = []
     for _ in range(n):
@@ -27,11 +29,11 @@ def get_with_stack(root_node, stack):
     return node
 
 def thru_giving_depth(root_node):
-    yield (0, root_node)
+    yield (0, root_node, type(root_node))
     stack = [0]
     while True:
         node = get_with_stack(root_node, stack)
-        yield (len(stack), node)
+        yield (len(stack), node, type(node))
 
         stack.append(0)
         if issubclass(type(get_with_stack(root_node, stack)), Node):
@@ -50,7 +52,7 @@ def thru_giving_depth(root_node):
 def get_vis_stack_str(root_node):
     out = []
     for elem in thru_giving_depth(root_node):
-        out.append('|'+dupe(DEPTH_CHAR, elem[0])+str(elem[1].v)+'\n')
+        out.append('|'+dupe(DEPTH_CHAR, elem[0])+str(elem[1])+'\n')
     return ''.join(out)
 
 
@@ -82,8 +84,6 @@ def index(root_node, i):
 def get_function(c):
     plus = sum
     def minus(iterable):
-        if len(iterable) != 2:
-            raise TypeError('subtraction is done on 2 numbers.')
         return iterable[0] - iterable[1]
     def multiply(iterable):
         result = 1
@@ -91,8 +91,6 @@ def get_function(c):
             result *= arg
         return result
     def divide(iterable):
-        if len(iterable) != 2:
-            raise TypeError('division is done on 2 numbers.')
         return iterable[0] / iterable[1]
     equals = lambda iterable: iterable[0] == iterable[1]
 
@@ -133,7 +131,7 @@ def get_function(c):
     try:
         function = name_to_function[c]
     except KeyError:
-        print(f'===LANG ERROR: The function \'{c}\' is not implemented.===')
+        raise LangError(f'===LANG ERROR: The function \'{c}\' is not implemented.===')
         exit(1)
     else:
         return function
@@ -163,7 +161,7 @@ def do(root_node):
 
     # Reconstruct an AST, after restructuring the elems to not have OPENING_BRACKET nodes.
     tree = Root()
-    tree.add(Node(elems[0][1].v, None))
+    tree.add(elems[0][2](elems[0][1].v, None))
     node = tree.nodes[0]
     past_layer = elems[0][0]
     for elem in elems[1:]:
@@ -215,7 +213,7 @@ def do(root_node):
             while get_with_stack(tree, st).v != ROOT:
                 n = get_with_stack(tree, st)
                 if n.v == 'if' and n is not parent_func_node:
-                    # TODO figure out whether object comparison should be done with == or is.
+                    # TODO fix cases where not sure if object comparison should be done with == or is.
                     if_nodes.append((list(st), n))
                 st.pop()
 
@@ -299,5 +297,7 @@ class Node:
         raise IndexError('tree index not found (out of range?)')
 
 class Root(Node):
-    def __init__(self):
+    def __init__(self, _=None, __=None):
         super().__init__(ROOT, None)
+
+class Data(Node): pass

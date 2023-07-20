@@ -10,20 +10,11 @@ CLOSING_BRACKET = ')'
 COMMENT_PREFIX = '#'
 assert len(COMMENT_PREFIX) == 1
 
+
 def is_whitespace(s):
     for c in s:
         if c != ' ':
             return False
-    return True
-
-
-def is_comment(s):
-    found_hash = False
-    for c in s:
-        if not found_hash and c != COMMENT_PREFIX and c != ' ':
-            return False
-        if c == COMMENT_PREFIX:
-            found_hash = True
     return True
 
 
@@ -49,7 +40,7 @@ def is_str(v):
     return False
 
 
-def chomp(s: str, c: str):
+def rm_char_instances(s: str, c: str):
     """
     Remove all instances of an unwanted character in a string.
     :param s: the string in which we take out all instances of the unwanted character.
@@ -105,7 +96,9 @@ def get_tokens(s):
     # Check if (add 1 1 ) or ( add 1 1) or ( add 1 1 )
     for tok in split:
         if tok == ')' or tok == '(':
-            raise RuntimeError('Syntax')
+            raise LangError(
+                'Opening and closing brackets must be attached without spaces '
+                'to functions and last arguments, respectively.')
 
     for tok in split:
         if ')' not in tok:
@@ -150,9 +143,9 @@ def get_tree(tokens):
             on_tok.add(Node(tok, None))
         else:
             if is_int(tok):
-                on_tok.add(Node(int(tok), None))
+                on_tok.add(Data(int(tok), None))
             elif is_str(tok):
-                on_tok.add(Node(str(tok.strip('"')), None))
+                on_tok.add(Data(str(tok.strip('"')), None))
             else:
                 on_tok.add(Node(tok, None))
 
@@ -161,55 +154,33 @@ def get_tree(tokens):
 
     return tree
 
-'''
-def repl():
-    try:
-        print('Welcome to the Lang interpreter!')
-        while True:
-            get = input('$ ')
-            if is_whitespace(get) or is_comment(get):
-                continue
-            tokens = get_tokens(get)
-            toktok = []
-            for tok in tokens:
-                if not is_whitespace(tok):
-                    toktok.append(tok)
-
-            tree = get_tree(toktok)
-            print(do(tree))
-
-    except EOFError:
-        print()
-        return
-    except KeyboardInterrupt:
-        print()
-        return
-'''
-
-
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         filename = sys.argv[1]
     else:
-        #repl()
+        print('Please provide a filename!')
         exit(0)
 
     with open(filename) as f:
-        s = f.read().strip()
+        raw_code_w_o_front_back_whitespace = f.read().strip()
+
+    raw_exprs = raw_code_w_o_front_back_whitespace.split(';')
+
+    # When the last expression is followed by a semicolon, the list returned
+    # by s.split(';') has an empty string as its last value. This value, if
+    # present, must be removed as it fucks up the compress_whitespace function.
+    if raw_exprs[-1] == '':
+        raw_exprs.pop()
 
     exprs = []
-    for S in s.split(';'):
-        if not is_whitespace(S):
-            exprs.append(compress_whitespace(chomp(S.strip(), '\n')))
-
-    [print(colorama.Fore.CYAN + '\n'+expr, end='') for expr in exprs]
-    print(colorama.Style.RESET_ALL)
-    print('----\n')
+    for raw_expr in raw_exprs:
+        no_newlines = rm_char_instances(raw_expr, '\n')
+        also_no_redundant_spaces = compress_whitespace(no_newlines)
+        exprs.append(also_no_redundant_spaces)
 
     for line in exprs:
-        if is_whitespace(line) or is_comment(line):
-            continue
+        print(line)
 
         tokens = get_tokens(line)
 
@@ -221,3 +192,4 @@ if __name__ == '__main__':
         tree = get_tree(toktok)
 
         print(f'Top-level return: {do(tree)}')
+        print()

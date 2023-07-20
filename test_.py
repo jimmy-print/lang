@@ -15,7 +15,7 @@ class CompareRecursiveToStack(unittest.TestCase):
         exprs = []
         for S in big_str.split(';'):
             if not is_whitespace(S):
-                exprs.append(compress_whitespace(chomp(S.strip(), '\n')))
+                exprs.append(compress_whitespace(rm_char_instances(S.strip(), '\n')))
         
         self.trees = [] 
         for line in exprs:
