@@ -180,8 +180,6 @@ if __name__ == '__main__':
         exprs.append(also_no_redundant_spaces)
 
     for line in exprs:
-        print(line)
-
         tokens = get_tokens(line)
 
         toktok = []
@@ -191,5 +189,5 @@ if __name__ == '__main__':
 
         tree = get_tree(toktok)
 
-        print(f'Top-level return: {do(tree)}')
-        print()
+        #print(f'Top-level return: {do(tree)}')
+        do(tree)

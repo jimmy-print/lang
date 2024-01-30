@@ -19,9 +19,6 @@ class CompareRecursiveToStack(unittest.TestCase):
         
         self.trees = [] 
         for line in exprs:
-            if is_whitespace(line) or is_comment(line):
-                continue
-            
             tokens = get_tokens(line)
 
             toktok = []

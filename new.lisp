@@ -1,5 +1,2 @@
-(set "a" 1);
-(print "{}" ($ "a"));
-(if (= ($ "a") 1)
-    (print "yes!"));
-(print asdf);
+(while (< 1 5)
+    (print "asdf"));

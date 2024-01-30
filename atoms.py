@@ -62,10 +62,10 @@ def get_vis_recursive_str(node, layer=0, in_testing=False):
         raise DeprecationWarning('Do not use recursive functions.')
     def __(node, layer=0):
         if layer == 0:
-            yield'|' + dupe(DEPTH_CHAR, layer) + str(node.v) + '\n'
+            yield'|' + dupe(DEPTH_CHAR, layer) + str(node) + '\n'
 
         for NODE in node.nodes:
-            yield '|' + dupe(DEPTH_CHAR, layer + 1) + str(NODE.v) + '\n'
+            yield '|' + dupe(DEPTH_CHAR, layer + 1) + str(NODE) + '\n'
             yield from __(NODE, layer + 1)
     return ''.join(__(node, 0))
 
@@ -93,6 +93,7 @@ def get_function(c):
     def divide(iterable):
         return iterable[0] / iterable[1]
     equals = lambda iterable: iterable[0] == iterable[1]
+    less_than = lambda iterable: iterable[0] < iterable[1]
 
     def print_(iterable):
         format_string = iterable[0]
@@ -103,6 +104,7 @@ def get_function(c):
         return input(format_string.format(*iterable[1:]))
 
     if_ = lambda iterable: None
+    while_ = lambda iterable: None
 
     def set(iterable):
         global_variables[iterable[0]] = iterable[1]
@@ -117,12 +119,18 @@ def get_function(c):
         '*': multiply,
         '/': divide,
         '=': equals,
+        '<': less_than,
+
         'print': print_,
         'input': input_,
+
         'if': if_,
+        'while': while_,
+
         'set': set,
         '$': get,
-        'int': int_
+
+        'int': int_,
     }
 
     for expected_function in name_to_function.values():
@@ -180,6 +188,8 @@ def do(root_node):
         node = new_node
         past_layer = elem[0]
 
+    orig_tree = deepcopy(tree)
+
     # Execute on the AST.
     stack = [0]
     stop = False
@@ -193,6 +203,9 @@ def do(root_node):
         stack[-1] += 1
 
         while get_with_stack(tree, stack) == INDEX_TOO_BIG and stack != [1]:
+            #print(get_vis_stack_str(tree))
+
+            print(f'\t\t{stack}')
             last_arg_node_stack = list(stack)
             last_arg_node_stack[-1] -= 1
 
@@ -206,15 +219,15 @@ def do(root_node):
 
             args = [node.v for node in parent_func_node.nodes]
 
-            # Find the parent ifs, if there are any.
-            if_nodes = []
+            # Find the parent ifs and whiles, if there are any.
+            control_nodes = []
             st = deepcopy(last_arg_node_stack)
             st.pop()
             while get_with_stack(tree, st).v != ROOT:
                 n = get_with_stack(tree, st)
-                if n.v == 'if' and n is not parent_func_node:
+                if (n.v == 'if' or n.v == 'while') and n is not parent_func_node:
                     # TODO fix cases where not sure if object comparison should be done with == or is.
-                    if_nodes.append((list(st), n))
+                    control_nodes.append((list(st), n))
                 st.pop()
 
             # Determine if the current parent_func_node is part of the first
@@ -225,14 +238,14 @@ def do(root_node):
             is_base = None
             is_first_arg = None
 
-            if not if_nodes:
+            if not control_nodes:
                 is_base = True
             else:
-                closest_if_stack = list(if_nodes[0][0])
-                closest_if_arg_one_stack = list(closest_if_stack)
-                closest_if_arg_one_stack.append(0)
+                closest_control_stack = list(control_nodes[0][0])
+                closest_control_arg_one_stack = list(closest_control_stack)
+                closest_control_arg_one_stack.append(0)
 
-                for i, elem in enumerate(closest_if_arg_one_stack):
+                for i, elem in enumerate(closest_control_arg_one_stack):
                     if elem != parent_func_node_stack[i]:
                         is_first_arg = False
                         break
@@ -242,17 +255,40 @@ def do(root_node):
             if is_base or is_first_arg:
                 r = f(args)
             else:
-                all_true = all(elem[1].nodes[0].v for elem in if_nodes)
+                all_true = all(elem[1].nodes[0].v for elem in control_nodes)
                 if all_true:
                     r = f(args)
                 else:
                     r = None
 
-            parent_func_node.v = r
-            parent_func_node.nodes = []
+            print(f'\t{parent_func_node}')
+            if parent_func_node.v == 'while':
+                if parent_func_node.nodes[0].v:
+                    print(get_vis_stack_str(tree))
+                    #print(get_with_stack(tree, stack))
 
-            stack.pop()
-            stack[-1] += 1
+                    # Now, we replace!
+                    while_stack = list(stack)
+                    while_stack.pop()
+                    orig_while_node = get_with_stack(orig_tree, while_stack)
+
+                    parent_func_node.nodes = orig_while_node.nodes
+                    parent_func_node.v = orig_while_node.v
+
+                    print(get_vis_stack_str(tree))
+
+                else:
+                    parent_func_node.v = r
+                    parent_func_node.nodes = []
+
+                    stack.pop()
+                    stack[-1] += 1
+            else:
+                parent_func_node.v = r
+                parent_func_node.nodes = []
+
+                stack.pop()
+                stack[-1] += 1
 
         if stack == [1]:
             stop = True
