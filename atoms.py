@@ -1,5 +1,8 @@
-from copy import deepcopy
+import sys
 import types
+import time
+from colorama import Fore, Style
+from copy import deepcopy
 
 INDEX_TOO_BIG = 'INDEX_TOO_BIG'
 NO_NODES = 'NO_NODES'
@@ -9,6 +12,23 @@ DEPTH_CHAR = '_'
 ROOT = 'ROOT'
 
 global_variables = {}
+
+ 
+INTERPRETER_PREFIX = '@'
+# when we are running a file, sometimes we want each line to be printed
+# before evaluating it, for debugging purposes. this prefix lets one
+# distinguish between debugging print calls and actual (print "...")
+# in the .la file.
+
+
+def interpreter_print(*values, sep=' ', end='\n', file=sys.stdout, flush=False, color=Fore.GREEN):
+    values_list = list(values)
+    values_list.insert(0, INTERPRETER_PREFIX)
+
+    print(color, end='')
+    print(*values_list, sep=sep, end=end, file=file, flush=flush)
+    print(Style.RESET_ALL, end='')
+
 
 class LangError(Exception): pass
 
@@ -94,6 +114,7 @@ def get_function(c):
         return iterable[0] / iterable[1]
     equals = lambda iterable: iterable[0] == iterable[1]
     less_than = lambda iterable: iterable[0] < iterable[1]
+    modulo = lambda iterable: iterable[0] % iterable[1]
 
     def print_(iterable):
         format_string = iterable[0]
@@ -110,6 +131,9 @@ def get_function(c):
         global_variables[iterable[0]] = iterable[1]
     def get(iterable):
         return global_variables[iterable[0]]
+    def wait(iterable):
+        time.sleep(iterable[0])
+        return None
 
     int_ = lambda iterable: int(iterable[0])
 
@@ -120,6 +144,7 @@ def get_function(c):
         '/': divide,
         '=': equals,
         '<': less_than,
+        '%': modulo,
 
         'print': print_,
         'input': input_,
@@ -131,6 +156,8 @@ def get_function(c):
         '$': get,
 
         'int': int_,
+
+        'wait': wait,
     }
 
     for expected_function in name_to_function.values():
@@ -190,12 +217,15 @@ def do(root_node):
 
     orig_tree = deepcopy(tree)
 
+    interpreter_print(get_vis_stack_str(tree), color=Fore.CYAN)
+    
     # Execute on the AST.
     stack = [0]
     stop = False
     while not stop:
         stack.append(0)
         if issubclass(type(get_with_stack(tree, stack)), Node):
+            #interpreter_print(get_with_stack(tree, stack), color=Fore.RED)
             continue
         elif get_with_stack(tree, stack) == NO_NODES:
             stack.pop()
@@ -203,19 +233,28 @@ def do(root_node):
         stack[-1] += 1
 
         while get_with_stack(tree, stack) == INDEX_TOO_BIG and stack != [1]:
-            #print(get_vis_stack_str(tree))
-
-            print(f'\t\t{stack}')
+            # I.e., when you're falling off the end of a function (+ 1 1) <-
+            
             last_arg_node_stack = list(stack)
             last_arg_node_stack[-1] -= 1
 
             last_arg_node = get_with_stack(tree, last_arg_node_stack)
+            
             parent_func_node = last_arg_node.parent
+            parent_func_node_stack = list(last_arg_node_stack)
+            parent_func_node_stack.pop()
 
             f = get_function(parent_func_node.v)
 
-            for node in parent_func_node.nodes:
-                assert len(node.nodes) == 0
+            for current_level_node in parent_func_node.nodes:
+                #assert len(current_level_node.nodes) == 0
+
+                pass
+                # We MUST not evaluate this function if there are nodes
+                # on our current level that still themselves have elements.
+                # E.g. (+ (+ 1 2) 2)<- Say we were hypothetically falling
+                # off the outermost + function. This assertion would catch
+                # this failure.
 
             args = [node.v for node in parent_func_node.nodes]
 
@@ -223,21 +262,27 @@ def do(root_node):
             control_nodes = []
             st = deepcopy(last_arg_node_stack)
             st.pop()
+            # Currently, st represents the stack of the parent function.
+            # So, if falling off (+ 1 1), st points to +.
+            
             while get_with_stack(tree, st).v != ROOT:
+                # Keep going up the stack.
+                
                 n = get_with_stack(tree, st)
-                if (n.v == 'if' or n.v == 'while') and n is not parent_func_node:
+
+                if (n.v == 'if' or n.v == 'while') and st != parent_func_node_stack:
                     # TODO fix cases where not sure if object comparison should be done with == or is.
                     control_nodes.append((list(st), n))
                 st.pop()
 
             # Determine if the current parent_func_node is part of the first
-            # argument of its closest IF parent.
-            parent_func_node_stack = list(last_arg_node_stack)
-            parent_func_node_stack.pop()
+            # argument of its closest 'if' parent.
+            
 
             is_base = None
             is_first_arg = None
-
+            #print(parent_func_node, parent_func_node_stack, control_nodes)
+            #print()
             if not control_nodes:
                 is_base = True
             else:
@@ -251,7 +296,7 @@ def do(root_node):
                         break
                 else:
                     is_first_arg = True
-
+            (lambda: None)()
             if is_base or is_first_arg:
                 r = f(args)
             else:
@@ -261,22 +306,23 @@ def do(root_node):
                 else:
                     r = None
 
-            print(f'\t{parent_func_node}')
             if parent_func_node.v == 'while':
                 if parent_func_node.nodes[0].v:
-                    print(get_vis_stack_str(tree))
-                    #print(get_with_stack(tree, stack))
-
                     # Now, we replace!
                     while_stack = list(stack)
                     while_stack.pop()
                     orig_while_node = get_with_stack(orig_tree, while_stack)
 
-                    parent_func_node.nodes = orig_while_node.nodes
-                    parent_func_node.v = orig_while_node.v
+                    get_with_stack(tree, while_stack).nodes = deepcopy(orig_while_node.nodes)
+                    get_with_stack(tree, while_stack).v = deepcopy(orig_while_node.v)
 
-                    print(get_vis_stack_str(tree))
+                    #parent_func_node = deepcopy(orig_while_node)
+                    # Important: Assigning to parent_func_node wasn't working because
+                    # it was a local name??
 
+                    stack.pop()
+                    #print('fall off')
+                    break
                 else:
                     parent_func_node.v = r
                     parent_func_node.nodes = []
@@ -290,8 +336,10 @@ def do(root_node):
                 stack.pop()
                 stack[-1] += 1
 
+                
         if stack == [1]:
             stop = True
+        #time.sleep(0.15)
 
     assert len(tree.nodes) == 1
     return tree.nodes[0].v

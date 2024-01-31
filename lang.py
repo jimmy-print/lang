@@ -9,7 +9,7 @@ CLOSING_BRACKET = ')'
 
 COMMENT_PREFIX = '#'
 assert len(COMMENT_PREFIX) == 1
-
+ 
 
 def is_whitespace(s):
     for c in s:
@@ -179,7 +179,9 @@ if __name__ == '__main__':
         also_no_redundant_spaces = compress_whitespace(no_newlines)
         exprs.append(also_no_redundant_spaces)
 
-    for line in exprs:
+    for n, line in enumerate(exprs):
+        interpreter_print(f'{n} {line}')
+
         tokens = get_tokens(line)
 
         toktok = []
@@ -189,5 +191,6 @@ if __name__ == '__main__':
 
         tree = get_tree(toktok)
 
-        #print(f'Top-level return: {do(tree)}')
-        do(tree)
+        interpreter_print(f'Top-level return: {do(tree)}')
+        print()
+
