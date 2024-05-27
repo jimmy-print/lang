@@ -1,0 +1,2 @@
+(print "asdf");
+(while 1 (print "asdf"));

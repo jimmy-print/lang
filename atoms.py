@@ -2,7 +2,7 @@ import sys
 import types
 import time
 from colorama import Fore, Style
-from copy import deepcopy
+from copy import copy, deepcopy
 
 INDEX_TOO_BIG = 'INDEX_TOO_BIG'
 NO_NODES = 'NO_NODES'
@@ -49,6 +49,21 @@ def get_with_stack(root_node, stack):
     return node
 
 def thru_giving_depth(root_node):
+    '''
+    This function, along with thru_giving_depth_and_stack, only works for Root ASTs.
+    This is because the Root ASTs are guaranteed to have the below structure:
+    Root
+    - function
+    -- a
+    -- b
+    -- c
+
+    They are guaranteed to only have one node below the Root node.
+    thru_giving_depth stops when the stack is [1]. [1] would give the second node below the Root node,
+    which is guaranteed to not exist.
+
+    TODO verify that thru_giving_depth is never used for non-Root ASTs in the rest of the program.
+    '''
     yield (0, root_node, type(root_node))
     stack = [0]
     while True:
@@ -69,10 +84,68 @@ def thru_giving_depth(root_node):
         if stack == [1]:
             break
 
-def get_vis_stack_str(root_node):
+
+def thru_giving_depth_and_stack(root_node):
+    yield (0, root_node, type(root_node), [])
+    stack = [0]
+    while True:
+        node = get_with_stack(root_node, stack)
+        yield (len(stack), node, type(node), stack)
+
+        stack.append(0)
+        if issubclass(type(get_with_stack(root_node, stack)), Node):
+            continue
+        elif get_with_stack(root_node, stack) == NO_NODES:
+            stack.pop()
+
+        stack[-1] += 1
+        while get_with_stack(root_node, stack) == INDEX_TOO_BIG and stack != [1]:
+            stack.pop()
+            stack[-1] += 1
+
+        if stack == [1]:
+            break
+
+
+def iterate_through_node_not_root(starting_node):
+    yield (0, starting_node, type(starting_node), [])
+    stack = [0]
+    while True:
+        node = get_with_stack(starting_node, stack)
+        yield (len(stack), node, type(node), stack)
+
+        stack.append(0)
+        if issubclass(type(get_with_stack(starting_node, stack)), Node):
+            continue
+        elif get_with_stack(starting_node, stack) == NO_NODES:
+            stack.pop()
+
+        stack[-1] += 1
+        while get_with_stack(starting_node, stack) == INDEX_TOO_BIG and stack != [1]:
+            stack.pop()
+            if stack == []:
+                return
+            stack[-1] += 1
+
+
+def new_get_vis_stack_str(root_node, printid=False):
+    out = []
+    for elem in iterate_through_node_not_root(root_node):
+        out.append('|'+dupe(DEPTH_CHAR, elem[0])+str(elem[1]))
+        if printid:
+            out.append(str(id(elem)))
+        out.append('\n')
+    return ''.join(out)
+
+
+
+def get_vis_stack_str(root_node, printid=False):
     out = []
     for elem in thru_giving_depth(root_node):
-        out.append('|'+dupe(DEPTH_CHAR, elem[0])+str(elem[1])+'\n')
+        out.append('|'+dupe(DEPTH_CHAR, elem[0])+str(elem[1]))
+        if printid:
+            out.append(str(id(elem)))
+        out.append('\n')
     return ''.join(out)
 
 
@@ -217,7 +290,7 @@ def do(root_node):
 
     orig_tree = deepcopy(tree)
 
-    interpreter_print(get_vis_stack_str(tree), color=Fore.CYAN)
+    interpreter_print(get_vis_stack_str(tree, printid=True), color=Fore.CYAN)
     
     # Execute on the AST.
     stack = [0]
@@ -308,14 +381,35 @@ def do(root_node):
 
             if parent_func_node.v == 'while':
                 if parent_func_node.nodes[0].v:
+
                     # Now, we replace!
                     while_stack = list(stack)
                     while_stack.pop()
+
                     orig_while_node = get_with_stack(orig_tree, while_stack)
 
-                    get_with_stack(tree, while_stack).nodes = deepcopy(orig_while_node.nodes)
-                    get_with_stack(tree, while_stack).v = deepcopy(orig_while_node.v)
+                    #interpreter_print(get_vis_stack_str(orig_while_node), color=Fore.RED)
+                    #[print(a) for a in iterate_through_node_not_root(orig_while_node)]
+                    lowers = []
+                    for i, O in enumerate(iterate_through_node_not_root(orig_while_node)):
+                        if i != 0:
+                            lowers.append(list(O[:3]))
+                            lowers[i-1].append(O[3][:])
 
+                    #get_with_stack(tree, while_stack).nodes = deepcopy(orig_while_node.nodes)
+                    #get_with_stack(tree, while_stack).v = deepcopy(orig_while_node.v)
+
+                    to_be_replaced_while_node = get_with_stack(tree, while_stack)
+                    to_be_replaced_while_node.nodes = []
+                    for lower in lowers:
+                        parent = get_with_stack(to_be_replaced_while_node, lower[-1][:-1])
+                        val = lower[1].v
+                        cl = lower[2]
+                        parent.add(cl(val,None))
+
+
+                    #interpreter_print(orig_while_node.nodes, color=Fore.BLUE)
+                    
                     #parent_func_node = deepcopy(orig_while_node)
                     # Important: Assigning to parent_func_node wasn't working because
                     # it was a local name??
