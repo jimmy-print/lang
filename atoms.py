@@ -209,6 +209,7 @@ def get_function(c):
         return None
 
     int_ = lambda iterable: int(iterable[0])
+    not_ = lambda iterable: not iterable[0]
 
     name_to_function = {
         '+': plus,
@@ -231,6 +232,8 @@ def get_function(c):
         'int': int_,
 
         'wait': wait,
+
+        '!': not_,
     }
 
     for expected_function in name_to_function.values():
