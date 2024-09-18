@@ -1,6 +1,5 @@
 
-
-
+(set "a variable with spaces!" 123);
 (set "n" 3);
 
 (while (< ($ "n") 10000)
@@ -9,7 +8,7 @@
     (set "prime" "none")
 
     (while (< ($ "i") ($ "n"))
-        (if (= (% ($ "n") ($ "i")) 0)
+        (if (= (mod ($ "n") ($ "i")) 0)
             (set "prime" "no"))
         (set "i" (+ ($ "i") 1)))
 
