@@ -1,5 +1,5 @@
 (set "i" 1);
-(set "limit" 10000);
+(set "limit" 100);
 (while (< ($ "i") ($ "limit"))
     (print "number:{}" ($ "i"))
 

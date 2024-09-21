@@ -1,6 +1,6 @@
-(set "n" 3);
+(set "n" 1);
 
-(while (< ($ "n") 10000)
+(while (< ($ "n") 100)
     (set "i" 2)
 
     (set "prime" "none")

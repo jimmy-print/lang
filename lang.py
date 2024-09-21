@@ -190,7 +190,6 @@ if __name__ == '__main__':
                 toktok.append(tok)
 
         tree = get_tree(toktok)
-
-        interpreter_print(f'Top-level return: {do(tree)}')
+        run(tree)
         print()
 

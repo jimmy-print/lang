@@ -3,12 +3,13 @@ from lang import *
 import unittest
 import atoms
 
+
 class CompareRecursiveToStack(unittest.TestCase):
     def setUp(self):
-        files_to_test = ['prime.la, format.la, new.what']
+        files_to_test = ['prime.lisp', 'factorial.lisp', 'mersenne.lisp', 'increment.lisp']
         big_str = []
-        for file in files_to_test:
-            with open('prime.la') as f:
+        for file_ in files_to_test:
+            with open(file_) as f:
                 s = f.read().strip()
                 big_str.append(s)
         big_str = ''.join(big_str)
@@ -37,6 +38,7 @@ class CompareRecursiveToStack(unittest.TestCase):
         for tree in self.trees:
             self.assertEqual(list(thru(tree)), list(Node._thru(tree, in_testing=True)))
 
+            
 class TestCalculatorStyleExpressionEvaluation(unittest.TestCase):
     def setUp(self):
         self.tests = {
@@ -47,13 +49,14 @@ class TestCalculatorStyleExpressionEvaluation(unittest.TestCase):
 
     def test_all_lines(self):
         for expr in self.tests:
-            result = lang.do(lang.get_tree(lang.get_tokens(expr)))
+            result = lang.run(lang.get_tree(lang.get_tokens(expr)))
             #print(f'expr: {expr}, result: {result}')
             self.assertEqual(result, self.tests[expr])
 
+            
 def reset_vardict_and_run_expr(expr):
     atoms.global_variables = {}
-    return do(get_tree(get_tokens(expr)))
+    return run(get_tree(get_tokens(expr)))
 
 class TestVariables(unittest.TestCase):
     def test_value_exists_and_is_equal(self):
@@ -73,12 +76,12 @@ class TestVariables(unittest.TestCase):
 
     def test_int_value_can_be_read(self):
         reset_vardict_and_run_expr('(set "a" 1)')
-        res = do(get_tree(get_tokens('($ "a")')))
+        res = run(get_tree(get_tokens('($ "a")')))
         self.assertEqual(res, 1)
 
     def test_str_value_can_be_read(self):
         reset_vardict_and_run_expr('(set "a" "b")')
-        res = do(get_tree(get_tokens('($ "a")')))
+        res = run(get_tree(get_tokens('($ "a")')))
         self.assertEqual(res, "b")
 
 
@@ -111,6 +114,14 @@ class TestIf(unittest.TestCase):
     (if 1
         (set "a" 1)))''')
         self.assertDictEqual(atoms.global_variables, {})
+
+
+class TestWholePrograms(unittest.TestCase):
+    def test_prime(self):
+    	# Uses a bit of a hack rn. Instead of doing the same process by which lang.py runs a file,
+	# we run one expression, essentially surrounding the whole of prime.lisp in an (if (1) ...) expression.
+        pass 
+
 
 
 if __name__ == '__main__':
