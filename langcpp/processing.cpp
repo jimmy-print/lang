@@ -11,13 +11,26 @@ std::vector<std::string> lex(std::string line)
 
 	bool cut_off_tok;
 
-	bool processing_a_string;
+	bool processing_a_string = false;
 
+	bool on_last_char = false;
 	int i = 0;
 	for (auto c : line) {
 		char next_c = line[i + 1];
-		// TODO issues with the last char.
-
+		if (((long unsigned int) (i + 1)) == line.size()) {
+			// So, if @next_c is now reading past the last char in @line.
+			on_last_char = true;
+			// At this point, @next_c should not be read in any subsequent lines of code.
+			// Therefore, below, this case is handled in 2 ways:
+			//  1. If the last char is within an unterminated string, we detect that
+			//     and throw a runtime error. This way, 'next_c == QUOTE_CHAR' is never ran.
+			//  2. If the last char is part of a function, so like 'f' in (abc "a" "b" (abcdef <-,
+			//     we still add it to the current tok and then add that tok to the toks.
+			//  Otherwise, the last char is guaranteed to be either whitespace, quote char, or
+			//  a bracket. These ones can be handled normally. In the case of the quote_char,
+			//  the *previous* for loop iteration would've added the current c, the last char, to the tok,
+			//  which was then added to toks on that last loop.
+		}
 		i++;
 
 
@@ -36,6 +49,10 @@ std::vector<std::string> lex(std::string line)
 		if (processing_a_string) {
 			// Treat it as one massive tok.
 			tok.append(std::string(1, c));
+			if (on_last_char) {
+				throw std::runtime_error("unbalanced closing apostrophe");
+			}
+
 			if (next_c == QUOTE_CHAR) {
 				tok.append(std::string(1, QUOTE_CHAR));
 				cut_off_tok = true;
@@ -53,18 +70,22 @@ std::vector<std::string> lex(std::string line)
 
 			if (allowed_function_chars.find(c) != allowed_function_chars.end()) {
 				tok.append(std::string(1, c));
-				if (! (allowed_function_chars.find(next_c) != allowed_function_chars.end())) {
+				if (on_last_char) {
 					cut_off_tok = true;
+				} else {
+					if (allowed_function_chars.find(next_c) == allowed_function_chars.end()) {
+						cut_off_tok = true;
+					}
 				}
 			}
 			if (operator_chars.find(c) != operator_chars.end()) {
 				tok.append(std::string(1, c));
 				cut_off_tok = true;
-				// this lack of look-forward means that operators can only be  1 char long.
+				// this lack of look-forward means that operators can only be 1 char long.
 			}
 
 			if (c == '\n' or c == ' ') {
-				// Do nothing.
+				// Do nothing. Whitespace is thus ignored by the lexer.
 			}
 		}
 
@@ -75,9 +96,6 @@ std::vector<std::string> lex(std::string line)
 		}
 
 	}
-
-	std::cout << "toks: ";
-	parr<std::string>(toks, "\n");
 
 	return toks;
 }
