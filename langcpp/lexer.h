@@ -1,8 +1,8 @@
 #include <string>
 #include <vector>
 
-#ifndef PROCESSING_H
-#define PROCESSING_H
+#ifndef LEXER_H
+#define LEXER_H
 
 
 std::vector<std::string> lex(std::string line);

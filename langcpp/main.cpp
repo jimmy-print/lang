@@ -7,7 +7,8 @@
 #include <set>
 
 #include "utils.h"
-#include "processing.h"
+#include "lexer.h"
+#include "parser.h"
 
 
 int main(int argc, char** argv)
@@ -49,7 +50,21 @@ int main(int argc, char** argv)
 	// Now turn each line into a series of tokens.
 	for (auto line : splitted) {
 		std::cout << "Line: " << line << "\n";
-		lex(line);
+		std::vector<std::string> toks = lex(line);
+
+		for (auto s : toks) {
+				std::cout << s << " ";
+		}
+		std::cout << "\n";
+		
+		node ast = get_ast(toks);
+        FORMAT pkg = dfs_tree(&ast);
+        for (auto tup : pkg) {
+            for (int i = 0; i < std::get<1>(tup); i++) {
+                std::cout << "  ";
+            }
+            std::cout << (std::get<0>(tup))->v << "\n";
+        }
 	}
 
 

@@ -1,11 +1,11 @@
 #include <iostream>
 #include <cassert>
 #include <chrono>
+#include <tuple>
 
 #include "utils.h"
-#include "processing.h"
-
-#include <unistd.h>
+#include "lexer.h"
+#include "parser.h"
 
 
 int main()
@@ -103,9 +103,72 @@ ff)";
 
 
 
+	/////
+	node* root = new node();
+	root->v = "ROOT";
+	root->nodes = {};
+	root->parent = NULL;
+
+	add_node(root, "first elem");
+	add_node(root->nodes[0], "first elem's first elem");
+	add_node(root, "second elem");
+	add_node(root->nodes[1], "bb");
+
+	assert(root->nodes[0]->v == "first elem");
+	assert(root->nodes[0]->nodes.size() == 1);
+	assert(root->nodes[0]->parent == root);
+
+	assert(root->nodes[0]->nodes[0]->v == "first elem's first elem");
+	assert(root->nodes[0]->nodes[0]->nodes.size() == 0);
+	assert(root->nodes[0]->nodes[0]->parent == root->nodes[0]);
+
+	assert(root->nodes[1]->v == "second elem");
+	assert(root->nodes[1]->nodes.size() == 1);
+	assert(root->nodes[1]->parent == root);
+
+	assert(root->nodes[1]->nodes[0]->v == "bb");
+	assert(root->nodes[1]->nodes[0]->nodes.size() == 0);
+	assert(root->nodes[1]->nodes[0]->parent == root->nodes[1]);
+
+	std::vector<std::tuple<node*, int, int, std::vector<int>>> out_v = dfs_tree(root);
+
+
+	std::tuple<node*, int, int, std::vector<int>> top_out_v(root, 0, 0, {});
+	assert(out_v[0] == top_out_v);
+	std::tuple<node*, int, int, std::vector<int>> first_out_v(root->nodes[0], 1, 1, {0});
+	assert(out_v[1] == first_out_v);
+	std::tuple<node*, int, int, std::vector<int>> second_out_v(root->nodes[0]->nodes[0], 2, 2, {0, 0});
+	assert(out_v[2] == second_out_v);
+	std::tuple<node*, int, int, std::vector<int>> third_out_v(root->nodes[1], 1, 3, {1});
+	assert(out_v[3] == third_out_v);
+	std::tuple<node*, int, int, std::vector<int>> fourth_out_v(root->nodes[1]->nodes[0], 2, 4, {1, 0});
+	assert(out_v[4] == fourth_out_v);
+
+
+
+    for (auto pkg : out_v) {
+        std::cout << std::get<1>(pkg) << "\n";
+    }
+    
+
+
+
+	free_node(root);
+
+
+
+
+
+
+
 	auto t_end = std::chrono::high_resolution_clock::now();
 	std::cout << "\t-----\n\tAll tests succeeded!\n\t-----\n";
 	std::chrono::duration<double, std::milli> ms_double = t_end - t_start;
 	std::cout << "\tTests took " << ms_double.count() / 1000 << " seconds\n";
+
+
+
+
+
 	return 0;
 }
