@@ -129,7 +129,8 @@ def get_tree(tokens):
     on_tok = index(tree, 0)
 
     II = -1
-    for i, tok in enumerate(tokens):
+    for __, tok in enumerate(tokens):
+        print(tok, II)
         II += 1
         if tok == CLOSING_BRACKET:
             # now we change on_tok to the nicht above the on_tok
@@ -190,6 +191,7 @@ if __name__ == '__main__':
                 toktok.append(tok)
 
         tree = get_tree(toktok)
+        interpreter_print(get_vis_stack_str(tree))
         run(tree)
         print()
 

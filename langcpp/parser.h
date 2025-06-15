@@ -1,9 +1,10 @@
+#ifndef PARSER_H
+#define PARSER_H
+
 #include <vector>
 #include <string>
 #include <tuple>
 
-#ifndef PARSER_H
-#define PARSER_H
 
 #define ROOT "ROOT"
 
@@ -22,15 +23,13 @@ void add_node(node* n, std::string v);
 #define NORMAL 0
 node* get_with_stack(node* root, std::vector<int> stack, int* found_status);
 
-std::vector<
-	std::tuple<node*, int, int, std::vector<int>>
-	   > dfs_tree(node* root);
-#define FORMAT std::vector<std::tuple<node*, int, int, std::vector<int>>>
+#define DFF_TYPE std::vector<std::tuple<node*, int, int, std::vector<int>>>
+DFF_TYPE depth_first_flatten(node* root);
 
 
 node* get_with_index(node* n, int index);
 
-node get_ast(std::vector<std::string> toks);
+node* make_ast(std::vector<std::string> toks);
 
 
 void free_node(node* n);

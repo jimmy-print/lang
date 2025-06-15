@@ -308,7 +308,7 @@ def run(root_node):
 
         while get_with_stack(tree, stack) == INDEX_TOO_BIG and stack != [1]:
             # When you're falling off the end of a function (+ 1 1) <-
-
+            print(stack)
             last_arg_node_stack = list(stack)
             last_arg_node_stack[-1] -= 1
 

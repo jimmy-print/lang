@@ -130,7 +130,7 @@ ff)";
 	assert(root->nodes[1]->nodes[0]->nodes.size() == 0);
 	assert(root->nodes[1]->nodes[0]->parent == root->nodes[1]);
 
-	std::vector<std::tuple<node*, int, int, std::vector<int>>> out_v = dfs_tree(root);
+	DFF_TYPE out_v = depth_first_flatten(root);
 
 
 	std::tuple<node*, int, int, std::vector<int>> top_out_v(root, 0, 0, {});
@@ -168,7 +168,10 @@ ff)";
 
 
 
-
+    std::vector<int> aaaaa(3, 1);
+    parr<int>(aaaaa);
+    aaaaa[-1] ++;
+    parr<int>(aaaaa);
 
 	return 0;
 }

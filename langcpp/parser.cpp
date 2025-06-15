@@ -40,9 +40,7 @@ node* get_with_stack(node* root, std::vector<int> stack, int* found_status) {
 	return n;
 }
 
-std::vector<
-	std::tuple<node*, int, int, std::vector<int>>
-	   > dfs_tree(node* root)
+DFF_TYPE depth_first_flatten(node* root)
 {
     // Return format:
     // Tup: (ptr to node, depth of node, index of node, stack index pointing to node.)
@@ -50,25 +48,16 @@ std::vector<
 
 	out_v.push_back(
 		std::tuple<node*, int, int, std::vector<int>>(root, 0, 0, {}));
-//	print_node(root);
+
 	std::vector<int> stack = {0};
     int index = 0;
 	while (true) {
 		int status;
 		node* n = get_with_stack(root, stack, &status);	
 
-        /*
-		for (int i = 0; i < stack.size(); i ++) {
-			std::cout << " ";
-		}
-        */
-//		print_node(n);
         index ++;
 		out_v.push_back(
 			std::tuple<node*, int, int, std::vector<int>>(n, stack.size(), index, stack));
-
-
-//		parr<int>(stack);
 
 		stack.push_back(0);
 		int NEWstat;
@@ -85,7 +74,6 @@ std::vector<
 			stack.pop_back();
 			stack[stack.size() - 1] ++;
 			get_with_stack(root, stack, &new_stat);
-//			std::cout << "\t"; parr<int>(stack); std::cout << new_stat << "\n";
 		}
 
 		if (stack == std::vector<int>{root->nodes.size()}) {
@@ -97,8 +85,7 @@ std::vector<
 }
 
 node* get_with_index(node* n, int index) {
-		std::vector<std::tuple<node*, int, int, std::vector<int>>> pkg; 
-        pkg = dfs_tree(n);
+        DFF_TYPE pkg = depth_first_flatten(n);
         
         for (auto tup : pkg) {
             int INDEX = std::get<2>(tup);
@@ -109,9 +96,13 @@ node* get_with_index(node* n, int index) {
         }
 }
 
-node get_ast(std::vector<std::string> toks) {
-	node root = {ROOT, {}, NULL};
-	node* on_node = &root;
+node* make_ast(std::vector<std::string> toks) {
+    node* root = new node();
+    root->v = ROOT;
+    root->nodes = {};
+    root->parent = NULL;
+
+	node* on_node = root;
 
 	int index = -1; // The index of the flattened AST (one-dimensional array of nodes produced using depth-first search.)
 	// that we are currently..??? while constructing the AST.
@@ -125,7 +116,7 @@ node get_ast(std::vector<std::string> toks) {
 
 		add_node(on_node, tok);
 		if (tok == std::string(1, OPENING_BRACKET_CHAR)) {
-			on_node = get_with_index(&root, index + 1);
+			on_node = get_with_index(root, index + 1);
 		}
 	}
 
@@ -133,8 +124,8 @@ node get_ast(std::vector<std::string> toks) {
 }
 
 void free_node(node* n) {
-	std::vector<std::tuple<node*, int, int, std::vector<int>>> out_v = dfs_tree(n);
-	for (auto tup : out_v) {
+	DFF_TYPE all_nodes = depth_first_flatten(n);
+	for (auto tup : all_nodes) {
 		delete std::get<0>(tup);
 	}
 
