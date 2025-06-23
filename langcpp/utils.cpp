@@ -5,9 +5,9 @@
 bool is_whitespace(char c)
 {
 	switch (c) {
-		case ' ':
-		case '\n':
-			return true;
+    case ' ':
+    case '\n':
+        return true;
 	}
 	return false;
 }

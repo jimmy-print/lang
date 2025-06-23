@@ -2,6 +2,7 @@
 #include "utils.h"
 #include <unistd.h>
 #include <tuple>
+#include <algorithm>
 
 
 
@@ -47,21 +48,21 @@ DFF_TYPE depth_first_flatten(node* root)
 	std::vector<std::tuple<node*, int, int, std::vector<int>>> out_v;
 
 	out_v.push_back(
-		std::tuple<node*, int, int, std::vector<int>>(root, 0, 0, {}));
+                    std::tuple<node*, int, int, std::vector<int>>(root, 0, 0, {}));
 
 	std::vector<int> stack = {0};
     int index = 0;
 	while (true) {
 		int status;
-		node* n = get_with_stack(root, stack, &status);	
+		node* n = get_with_stack(root, stack, &status);
 
         index ++;
 		out_v.push_back(
-			std::tuple<node*, int, int, std::vector<int>>(n, stack.size(), index, stack));
+                        std::tuple<node*, int, int, std::vector<int>>(n, stack.size(), index, stack));
 
 		stack.push_back(0);
 		int NEWstat;
-		get_with_stack(root, stack, &NEWstat);	
+		get_with_stack(root, stack, &NEWstat);
 		if (NEWstat == NORMAL) {
 			continue;
 		} else if (NEWstat == NO_NODES) {
@@ -84,16 +85,132 @@ DFF_TYPE depth_first_flatten(node* root)
 	return out_v;
 }
 
-node* get_with_index(node* n, int index) {
-        DFF_TYPE pkg = depth_first_flatten(n);
-        
-        for (auto tup : pkg) {
-            int INDEX = std::get<2>(tup);
-            if (INDEX == index) {
-//                std::cout << "\t\t" << std::get<0>(tup)->v << "\n";
-                return std::get<0>(tup);
-            }
+int det_type(std::string raw) {
+    if (raw[0] == QUOTE_CHAR and raw[raw.size() - 1] == QUOTE_CHAR) {
+        return STR;
+    }
+    if (std::all_of(raw.begin(), raw.end(), [](char c) {
+                                                auto a = std::find(numbers.begin(), numbers.end(), c);
+                                                return (a != numbers.end());
+        })) {
+        return INT;
+    }
+
+    int count = 0;
+    for (auto c : raw) {
+        if (c == '.') {
+            count ++;
         }
+    }
+
+    if (count == 1) {
+        return FLOAT;
+    }
+
+    if (raw == NULLREPR) {
+        return NULLT;
+    }
+
+    if (raw == std::string{OPENING_BRACKET_CHAR}) {
+        return BRACK;
+    }
+
+    return FUNCT;  // Rn if the function name somehow gets past lexer with its predefined
+    // legal function chars, and gets here, it could still be a really crazy function name.
+}
+
+void convert_to_typed(node* ast) {
+    DFF_TYPE pkg = depth_first_flatten(ast);
+    for (auto a : pkg) {
+        node* n = std::get<0>(a);
+
+        std::string raw = n->v;
+        int type = det_type(raw);
+
+        dynobj D;
+        D.type = type;
+        switch (type) {
+        case STR:
+            D.vstr = raw;
+            D.vstr.erase(0, 1);  // To remove the " "
+            D.vstr.pop_back();
+            break;
+        case INT:
+            D.vint = stoi(raw);
+            break;
+        case FLOAT:
+            D.vfloat = stof(raw);
+            break;
+        case NULLT:
+            D.vnull = raw;
+            assert(raw == NULLREPR);
+            break;
+        case CONTR:
+            D.vcontrol = raw;
+            break;
+        case FUNCT:
+            D.vfunction = raw;
+            break;
+        case VAR:
+            D.vvar = raw;
+            break;
+        case BRACK:
+            D.vbrack = raw;
+            break;
+        }
+        n->D = D;
+    }
+}
+
+std::string extract_string_form(dynobj d) {
+    switch (d.type) {
+    case STR:
+        return d.vstr;
+    case INT:
+        return std::to_string(d.vint);
+    case FLOAT:
+        return std::to_string(d.vfloat);
+    case NULLT:
+        return d.vnull;
+    case CONTR:
+        return d.vcontrol;
+    case FUNCT:
+        return d.vfunction;
+    case VAR:
+        return d.vvar;
+    case BRACK:
+        return d.vbrack;
+    }
+}
+
+bool dynobj_is_truthy(dynobj d) {
+    // We define truthy as any INT non 0 or any STR except "". Other types ARE FALSE.
+    std::cout << "\t" << d.type << "\n";
+    switch (d.type) {
+    case INT:
+        if (d.vint == 0) {
+            return false;
+        }
+        return true;
+    case STR:
+        if (d.vstr == "") {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+node* get_with_index(node* n, int index) {
+    DFF_TYPE pkg = depth_first_flatten(n);
+
+    for (auto tup : pkg) {
+        int INDEX = std::get<2>(tup);
+        if (INDEX == index) {
+            //                std::cout << "\t\t" << std::get<0>(tup)->v << "\n";
+            return std::get<0>(tup);
+        }
+    }
 }
 
 node* make_ast(std::vector<std::string> toks) {

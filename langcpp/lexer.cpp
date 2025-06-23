@@ -68,13 +68,15 @@ std::vector<std::string> lex(std::string line)
 				cut_off_tok = true;
 			}
 
-			if (allowed_function_chars.find(c) != allowed_function_chars.end()) {
+			if (allowed_exposed_chars.find(c) != allowed_exposed_chars.end()) {
 				tok.append(std::string(1, c));
 				if (on_last_char) {
 					cut_off_tok = true;
 				} else {
-					if (allowed_function_chars.find(next_c) == allowed_function_chars.end()) {
+					if (allowed_exposed_chars.find(next_c) == allowed_exposed_chars.end()) {
 						cut_off_tok = true;
+                        // This may be wrong. It should probably throw an error instead.
+                        // Otherwise something like (+ 3#%^3 1) would lex to ( + 3 3 1 )
 					}
 				}
 			}

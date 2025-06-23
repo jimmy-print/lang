@@ -8,11 +8,8 @@
 #include "parser.h"
 
 
-int main()
-{
-	auto t_start = std::chrono::high_resolution_clock::now();
-
-	std::string file = R"(
+void test_strip_whitespace() {
+    std::string file = R"(
 
          int main()
 {}
@@ -35,11 +32,11 @@ ff)";
 
 	std::string b = "   \n\n   \n";
 	assert(strip_leading_and_trailing_whitespace(b) == std::string(""));
+}
 
 
-
-
-	std::string factorial_program_one_line = R"(
+void test_lexer() {
+   	std::string factorial_program_one_line = R"(
 (while (< ($ "i") ($ "limit"))
     (print "number: %" ($ "i"))
 
@@ -56,22 +53,21 @@ ff)";
 );
 )";
 	std::vector<std::string> toks = {
-		"(", "while", "(", "<", "(", "$", "\"i\"", ")", "(", "$", "\"limit\"", ")", ")",
-		"(", "print", "\"number: %\"", "(", "$", "\"i\"", ")", ")",
-		"(", "set", "\"j\"", "1", ")",
+                                     "(", "while", "(", "<", "(", "$", "\"i\"", ")", "(", "$", "\"limit\"", ")", ")",
+                                     "(", "print", "\"number: %\"", "(", "$", "\"i\"", ")", ")",
+                                     "(", "set", "\"j\"", "1", ")",
 
-		"(", "set", "\"t\"", "1", ")",
-		"(", "while", "(", "!", "(", "=", "(", "$", "\"j\"", ")", "(", "+", "(", "$", "\"i\"", ")", "1", ")", ")", ")",
-		"(", "set", "\"t\"", "(", "*", "(", "$", "\"t\"", ")", "(", "$", "\"j\"", ")", ")", ")",
-		"(", "set", "\"j\"", "(", "+", "(", "$", "\"j\"", ")", "1", ")", ")", 
-		")",
-		"(", "print", "\"factorial of % is %\"", "(", "$", "\"i\"", ")", "(", "$", "\"t\"", ")", ")",
-		"(", "set", "\"i\"", "(", "+", "(", "$", "\"i\"", ")", "1", ")", ")",
-		
+                                     "(", "set", "\"t\"", "1", ")",
+                                     "(", "while", "(", "!", "(", "=", "(", "$", "\"j\"", ")", "(", "+", "(", "$", "\"i\"", ")", "1", ")", ")", ")",
+                                     "(", "set", "\"t\"", "(", "*", "(", "$", "\"t\"", ")", "(", "$", "\"j\"", ")", ")", ")",
+                                     "(", "set", "\"j\"", "(", "+", "(", "$", "\"j\"", ")", "1", ")", ")",
+                                     ")",
+                                     "(", "print", "\"factorial of % is %\"", "(", "$", "\"i\"", ")", "(", "$", "\"t\"", ")", ")",
+                                     "(", "set", "\"i\"", "(", "+", "(", "$", "\"i\"", ")", "1", ")", ")",
 
-		")",};
+
+                                     ")",};
 	assert(lex(factorial_program_one_line) == toks);
-
 
 	/////
 	std::string program1_to_test_final_char_lexes_correctly = R"(
@@ -100,10 +96,10 @@ ff)";
 )";
 	std::vector<std::string> toks_for_program_3 = {"(", "while", "(", "=", "1", "\"1\"", ")", "af", "\"fds\""};
 	assert(lex(program3_to_test_final_char_lexes_correctly) == toks_for_program_3);
+}
 
 
-
-	/////
+void test_tree_constructs_correctly_and_depth_first_flattening() {
 	node* root = new node();
 	root->v = "ROOT";
 	root->nodes = {};
@@ -130,8 +126,8 @@ ff)";
 	assert(root->nodes[1]->nodes[0]->nodes.size() == 0);
 	assert(root->nodes[1]->nodes[0]->parent == root->nodes[1]);
 
-	DFF_TYPE out_v = depth_first_flatten(root);
 
+    DFF_TYPE out_v = depth_first_flatten(root);
 
 	std::tuple<node*, int, int, std::vector<int>> top_out_v(root, 0, 0, {});
 	assert(out_v[0] == top_out_v);
@@ -144,22 +140,19 @@ ff)";
 	std::tuple<node*, int, int, std::vector<int>> fourth_out_v(root->nodes[1]->nodes[0], 2, 4, {1, 0});
 	assert(out_v[4] == fourth_out_v);
 
-
-
-    for (auto pkg : out_v) {
-        std::cout << std::get<1>(pkg) << "\n";
-    }
-    
-
-
-
 	free_node(root);
+}
 
 
+int main()
+{
+	auto t_start = std::chrono::high_resolution_clock::now();
 
-
-
-
+    // Tests start now
+    test_strip_whitespace();
+    test_lexer();
+    test_tree_constructs_correctly_and_depth_first_flattening();
+    // End of tests
 
 	auto t_end = std::chrono::high_resolution_clock::now();
 	std::cout << "\t-----\n\tAll tests succeeded!\n\t-----\n";
@@ -167,11 +160,6 @@ ff)";
 	std::cout << "\tTests took " << ms_double.count() / 1000 << " seconds\n";
 
 
-
-    std::vector<int> aaaaa(3, 1);
-    parr<int>(aaaaa);
-    aaaaa[-1] ++;
-    parr<int>(aaaaa);
 
 	return 0;
 }
