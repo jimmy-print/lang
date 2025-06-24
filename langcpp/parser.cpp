@@ -16,11 +16,31 @@ void print_node(node* n) {
 	std::cout << "\n";
 }
 
+void print_tree(node* ast) {
+    DFF_TYPE pkg = depth_first_flatten(ast);
+    for (auto a : pkg) {
+        for (int i = 0; i < std::get<1>(a); i++) {
+            std::cout << "-";
+        }
+        std::cout << std::get<0>(a)->v << " | " << std::get<0>(a) << "\n";
+    }
+}
+
 void add_node(node* n, std::string v) {
 	node* new_node = new node();
 	new_node->v = v;
 	new_node->nodes = {};
 	new_node->parent = n;
+
+	n->nodes.push_back(new_node);
+}
+
+void add_node_dynobj(node* n, std::string v, dynobj D) {
+	node* new_node = new node();
+	new_node->v = v;
+	new_node->nodes = {};
+	new_node->parent = n;
+    new_node->D = D;
 
 	n->nodes.push_back(new_node);
 }
@@ -180,12 +200,13 @@ std::string extract_string_form(dynobj d) {
         return d.vvar;
     case BRACK:
         return d.vbrack;
+    case NTRAN:
+        return NTRAN_REPR;
     }
 }
 
 bool dynobj_is_truthy(dynobj d) {
     // We define truthy as any INT non 0 or any STR except "". Other types ARE FALSE.
-    std::cout << "\t" << d.type << "\n";
     switch (d.type) {
     case INT:
         if (d.vint == 0) {
@@ -199,6 +220,13 @@ bool dynobj_is_truthy(dynobj d) {
         return true;
     }
     return false;
+}
+
+bool operator==(dynobj lhs, dynobj rhs) {
+    return (
+            lhs.type == rhs.type and
+            extract_string_form(lhs) == extract_string_form(rhs)
+            );
 }
 
 node* get_with_index(node* n, int index) {
@@ -238,6 +266,56 @@ node* make_ast(std::vector<std::string> toks) {
 	}
 
     return root;
+}
+
+node* deepcopy_node(node* ast)
+{
+    node* copy = new node();
+    copy->v = ast->v;
+    copy->D = ast->D;
+
+    node* upper_node = copy;
+
+	std::vector<int> stack = {0};
+    int index = 0;
+	while (true) {
+		int status;
+		node* old_node = get_with_stack(ast, stack, &status);
+
+        index ++;
+
+        node* new_copy = new node();
+        upper_node->nodes.push_back(new_copy);
+        new_copy->v = old_node->v;
+        new_copy->D = old_node->D;
+        new_copy->parent = upper_node;
+
+		stack.push_back(0);
+		int NEWstat;
+		get_with_stack(ast, stack, &NEWstat);
+		if (NEWstat == NORMAL) {
+            upper_node = new_copy;
+			continue;
+		} else if (NEWstat == NO_NODES) {
+			stack.pop_back();
+
+		}
+		stack[stack.size() - 1] ++;
+		int new_stat;
+		get_with_stack(ast, stack, &new_stat);
+		while (new_stat == INDEX_TOO_BIG && stack.size() > 1) {
+			stack.pop_back();
+			stack[stack.size() - 1] ++;
+			get_with_stack(ast, stack, &new_stat);
+            upper_node = upper_node->parent;
+		}
+
+		if (stack == std::vector<int>{ast->nodes.size()}) {
+			break;
+		}
+	}
+
+    return copy;
 }
 
 void free_node(node* n) {

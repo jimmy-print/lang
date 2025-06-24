@@ -159,7 +159,24 @@ int main()
 	std::chrono::duration<double, std::milli> ms_double = t_end - t_start;
 	std::cout << "\tTests took " << ms_double.count() / 1000 << " seconds\n";
 
+    /*
+	node* root = new node();
+	root->v = "ROOT";
+	root->nodes = {};
+	root->parent = NULL;
 
+	add_node(root, "first elem");
+	add_node(root->nodes[0], "first elem's first elem");
+   	add_node(root->nodes[0], "first elem's 2nd elem");
+	add_node(root, "second elem");
+	add_node(root->nodes[1], "bb");
 
+    print_tree(root);
+
+    node* copy = deepcopy_node(root);
+    
+    print_tree(copy);
+    */                                   
+                                                     
 	return 0;
 }

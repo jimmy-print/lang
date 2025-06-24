@@ -12,7 +12,8 @@
 
 const std::string TRUE("TRUEE");
 const std::string FALSE("FALSEEE");
-const std::string NOT_RAN("NOT_RAN");
+
+dynobj NOT_RAN;
 
 dynobj add(std::vector<dynobj> args) {
     int ret_type;
@@ -126,6 +127,10 @@ void run(node* ast)
 
     int TRASH;
 
+    NOT_RAN.type = NTRAN;
+
+    node* orig_tree = deepcopy_node(ast);
+
     while (stack != std::vector<int>(1, 1)) {
         stack.push_back(0);
         int status;
@@ -181,27 +186,54 @@ void run(node* ast)
 
             bool parent_paren_is_top_level = (ancestor_control_nodes.size() == 0);
             dynobj r;
+            dynobj(*f)(std::vector<dynobj>) = functions.at(function_node->v);
             if (parent_paren_is_top_level) {
-                dynobj(*f)(std::vector<dynobj>) = functions.at(function_node->v);
                 r = f(args);
             } else {
                 bool all_true = std::all_of(ancestor_control_nodes.begin(), ancestor_control_nodes.end(),
-                                            [](node* n) {return dynobj_is_truthy(n->nodes[2]->D);});
+                                            [](node* n) {return dynobj_is_truthy(n->nodes[1]->D);});
                 if (all_true) {
-                                    r = f(args);
+                    r = f(args);
                 } else {
                     r = NOT_RAN;
                 }
             }
 
-            bool cond_was_false = parent_paren_node->nodes[1]->v == FALSE;
+            bool cond_was_false = not dynobj_is_truthy(parent_paren_node->nodes[1]->D);
 
             std::vector<node*> sliced(parent_paren_node->nodes.begin() + 1, parent_paren_node->nodes.end());
-            bool nothing_ran = std::all_of(sliced.begin(), sliced.end(), [](node* n) {return n->v == NOT_RAN;});
+            bool nothing_ran = std::all_of(sliced.begin(), sliced.end(), [](node* n) {return n->D == NOT_RAN;});
 
             if (function_node->v == "while" and not nothing_ran and not cond_was_false) {
-                exit(1);
+                std::vector<int> while_stack(stack);
+                while_stack.pop_back();
 
+                node* orig_while_node = get_with_stack(orig_tree, while_stack, &TRASH);
+                print_node(orig_while_node);
+                
+                DFF_TYPE lowers;
+                DFF_TYPE pkg = depth_first_flatten(orig_while_node);
+
+                int i = 0;
+                for (auto a : pkg) {
+                    if (i != 0) {
+                        lowers.push_back(DFF_TYPE_MINI(a));
+                        std::get<3>(lowers[i - 1]) = std::vector<int>(std::get<3>(a));
+                    }
+                    i++;
+                }
+
+                node* to_be_replaced_while_node = get_with_stack(ast, while_stack, &TRASH);
+                to_be_replaced_while_node->nodes = {};
+                for (auto b : lowers) {
+                    std::vector<int> asdf = std::get<3>(b);
+                    asdf.pop_back();
+                    node* parent = get_with_stack(to_be_replaced_while_node, asdf, &TRASH);
+                    dynobj D = std::get<0>(b)->D;
+                    std::string v = std::get<0>(b)->v;
+                    add_node_dynobj(parent, v, D);
+                }
+                stack.pop_back();
             } else {
                 parent_paren_node->D = r;
                 parent_paren_node->v = extract_string_form(parent_paren_node->D);
@@ -211,9 +243,6 @@ void run(node* ast)
                 stack.back() ++;
             }
         }
-
     }
 }
-
-
 

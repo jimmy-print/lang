@@ -308,7 +308,7 @@ def run(root_node):
 
         while get_with_stack(tree, stack) == INDEX_TOO_BIG and stack != [1]:
             # When you're falling off the end of a function (+ 1 1) <-
-            print(stack)
+            #print(stack)
             last_arg_node_stack = list(stack)
             last_arg_node_stack[-1] -= 1
 
@@ -376,6 +376,8 @@ def run(root_node):
 
                 orig_while_node = get_with_stack(orig_tree, while_stack)
 
+                print(orig_while_node)
+                
                 lowers = []
                 for i, O in enumerate(iterate_through_node_not_root(orig_while_node)):
                     if i != 0:
@@ -391,12 +393,6 @@ def run(root_node):
                     parent.add(cl(val,None))
 
                 stack.pop()
-            elif parent_func_node.v == 'while' and cond_was_false and nothing_ran:
-                parent_func_node.v = r
-                parent_func_node.nodes = []
-
-                stack.pop()
-                stack[-1] += 1
             else:  # so a normal function falling off or an if function falling off
                 parent_func_node.v = r
                 parent_func_node.nodes = []

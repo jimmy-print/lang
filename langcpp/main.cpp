@@ -57,11 +57,6 @@ int main(int argc, char** argv)
         std::cout << "Line: " << line << "\n";
         std::vector<std::string> toks = lex(line);
 
-        for (auto s : toks) {
-            std::cout << s << " ";
-        }
-        std::cout << "\n";
-
         node* ast = make_ast(toks);
         convert_to_typed(ast);
         run(ast);
