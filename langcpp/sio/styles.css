@@ -1,0 +1,99 @@
+#header {
+    width: 100%;
+    background: linear-gradient(to bottom right, black, blue);
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+
+
+
+    z-index: 2;
+}
+
+#mainheader {
+    font-size: 3rem;
+}
+
+#body {
+    top: 430px;
+    position: relative;
+}
+
+.center{
+    margin-left: auto;
+    margin-right: auto;
+
+    max-width: 65em;
+
+}
+
+#footer {
+    margin-left: auto;
+    margin-right: auto;
+
+    font-size: 0.8rem;
+
+    text-align: center;
+}
+
+h1 {
+    font-size: 5rem;
+    color: white;
+    margin: 0px;
+}
+
+#header p{
+    color: white;
+    font-size: 1.5rem;
+}
+
+body {
+    font-family: Arial;
+    margin: 0px;
+    padding: 0px;
+    height: 2000px;
+}
+
+
+
+.button-7 {
+  background-color: #0095ff;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  box-shadow: rgba(255, 255, 255, .4) 0 1px 0 0 inset;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-family: -apple-system,system-ui,"Segoe UI","Liberation Sans",sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.15385;
+  margin: 0;
+  outline: none;
+  padding: 8px .8em;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.button-7:hover,
+.button-7:focus {
+  background-color: #07c;
+}
+
+.button-7:focus {
+  box-shadow: 0 0 0 4px rgba(0, 149, 255, .15);
+}
+
+.button-7:active {
+  background-color: #0064bd;
+  box-shadow: none;
+}
+
+canvas {
+}

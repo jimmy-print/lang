@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+
+<div id="header">
+    <div class="center">
+                        <h1 id="mainheader">L--;</h1>
+        <p id="headerdesc">Visual interpreter for a simple lisp-style programming language.</p>
+        <canvas id="canvas">
+    </div>
+</div>
+
+    <div id="body">
+    <div class="center">
+    <p>a</p>
+
+<textarea>
+
+(set "exp" 2);
+
+(while (< ($ "exp") 100)
+  (set "val" 1)
+  (set "base" 2)
+  (set "i" 0)
+  (while (< ($ "i") ($ "exp"))
+    (set "val" (* ($ "val") ($ "base")))
+    (set "i" (+ ($ "i") 1)))
+
+  (set "totest" (- ($ "val") 1))
+
+  (set "ii" 2)
+  (set "prime" "none")
+  (while (< ($ "ii") ($ "totest"))
+    (if (= (% ($ "totest") ($ "ii")) 0)
+        (set "prime" "no"))
+    (set "ii" (+ ($ "ii") 1)))
+
+  (if (= ($ "prime") "none")
+      (set "prime" "yes"))
+
+  (if (= ($ "prime") "yes")
+      (print "2**{}={}mersenneprime" ($ "exp") ($ "totest")))
+  (set "exp" (+ ($ "exp") 1)));
+</textarea>
+
+</body>
+
+
+    <script src="a.js"></script>
+</html>
