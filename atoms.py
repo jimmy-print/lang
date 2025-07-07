@@ -376,7 +376,7 @@ def run(root_node):
 
                 orig_while_node = get_with_stack(orig_tree, while_stack)
 
-                print(orig_while_node)
+                #print(orig_while_node)
                 
                 lowers = []
                 for i, O in enumerate(iterate_through_node_not_root(orig_while_node)):

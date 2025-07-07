@@ -143,6 +143,27 @@ void test_tree_constructs_correctly_and_depth_first_flattening() {
 	free_node(root);
 }
 
+void test_belongs_to() {
+    node* root = new node();
+	root->v = "ROOT";
+	root->nodes = {};
+	root->parent = NULL;
+
+	add_node(root, "first elem");
+	add_node(root->nodes[0], "first elem's first elem");
+	add_node(root, "second elem");
+	add_node(root->nodes[1], "bb");
+    
+    assert( belongs_to(root, root->nodes[0]->nodes[0]) );
+
+    node* other_node = new node();
+    other_node->v = "a";
+    other_node->nodes = {};
+    other_node->parent = NULL;
+    assert( ! belongs_to(root, other_node) );
+
+}
+
 
 int main()
 {
@@ -152,6 +173,9 @@ int main()
     test_strip_whitespace();
     test_lexer();
     test_tree_constructs_correctly_and_depth_first_flattening();
+
+    test_belongs_to();
+
     // End of tests
 
 	auto t_end = std::chrono::high_resolution_clock::now();

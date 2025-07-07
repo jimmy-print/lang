@@ -24,6 +24,7 @@ static const std::set<char> operator_chars = {
 	'!',
 	'<', '>',
 	'$',
+    '%',
 	'=',
 };
 

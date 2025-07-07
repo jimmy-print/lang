@@ -13,5 +13,5 @@
     (if (= ($ "prime") "none")
         (set "prime" "yes")
 
-        (print "{}{}" ($ "n") ($ "prime")))
+        (print ($ "n") ($ "prime")))
     (set "n" (+ ($ "n") 1)));

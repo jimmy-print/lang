@@ -37,7 +37,8 @@ struct dynobj {  // A compound struct capable of holding the data of any node in
 typedef struct dynobj dynobj;
 
 bool operator==(dynobj lhs, dynobj rhs);
-    
+
+
 const std::vector<char> numbers = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
 
 struct node {
@@ -76,5 +77,6 @@ node* make_ast(std::vector<std::string> toks);
 node* deepcopy_node(node* ast);
 
 void free_node(node* n);
+bool belongs_to(node* maybe_owner, node* target);
 
 #endif

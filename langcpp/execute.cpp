@@ -61,6 +61,49 @@ dynobj add(std::vector<dynobj> args) {
     return ret;
 }
 
+dynobj multiply(std::vector<dynobj> args) {
+    int ret_type;
+    if (std::any_of(args.cbegin(), args.cend(), [](dynobj D){ return D.type == FLOAT; })) {
+        ret_type = FLOAT;
+    } else if (std::all_of(args.cbegin(), args.cend(), [](dynobj D){ return D.type == INT; })) {
+        ret_type = INT;
+    }
+
+    if (not std::all_of(args.cbegin(), args.cend(), [](dynobj D){ return D.type == FLOAT or D.type == INT;})) {
+        throw std::runtime_error("multiply * function received invalid argument(s) of type other than int or float.");
+    }
+
+    dynobj ret;
+    if (ret_type == FLOAT) {
+        float prod = 1.0;
+        for (auto D : args) {
+            if (D.type == FLOAT) {
+                prod *= D.vfloat;
+            } else if (D.type == INT) {
+                prod *= (float) D.vint;
+            } else {
+                throw std::runtime_error("this should never happen, should've been caught previously");
+            }
+        }
+        ret.type = FLOAT;
+        ret.vfloat = prod;
+    } else if (ret_type == INT) {
+        int prod = 1;
+        for (auto D : args) {
+            if (D.type == FLOAT) {
+                prod *= (int) D.vfloat;
+            } else if (D.type == INT) {
+                prod *= D.vint;
+            } else {
+                throw std::runtime_error("this should never happen, should've been caught previously");
+            }
+        }
+        ret.type = INT;
+        ret.vint = prod;
+    }
+    return ret;
+}
+
 dynobj subtract(std::vector<dynobj> args) {
     assert(args.size() == 2);
     int ret_type;
@@ -92,6 +135,51 @@ dynobj subtract(std::vector<dynobj> args) {
     return ret;
 }
 
+
+dynobj lessthan(std::vector<dynobj> args) {
+    assert(args.size() == 2);
+    
+    if (not std::all_of(args.cbegin(), args.cend(), [](dynobj D){ return D.type == FLOAT or D.type == INT;})) {
+        // Arguments include a type other than int or float.
+        throw std::runtime_error("lessthan < function received invalid argument(s) of type other than int or float.");
+    }
+
+    dynobj ret;
+    ret.type = INT;
+    if (args[0].type == INT and args[1].type == INT) {
+        ret.vint = args[0].vint < args[1].vint;
+    } else if (args[0].type == INT and args[1].type == FLOAT) {
+        ret.vint = (float) args[0].vint < args[1].vfloat;
+    } else if (args[0].type == FLOAT and args[1].type == FLOAT) {
+        ret.vint = args[0].vfloat < args[1].vfloat;
+    } else if (args[0].type == FLOAT and args[1].type == INT) {
+        ret.vint = args[0].vfloat < (float) args[1].vint;
+    }
+    return ret;
+}
+
+dynobj modulo(std::vector<dynobj> args) {
+    assert(args.size() == 2);
+    
+    if (not std::all_of(args.cbegin(), args.cend(), [](dynobj D){ return D.type == INT;})) {
+        throw std::runtime_error("modulo % function received invalid argument(s) of type other than int");
+    }
+
+    dynobj ret;
+    ret.type = INT;
+    ret.vint = args[0].vint % args[1].vint;
+    return ret;
+}
+
+dynobj equals(std::vector<dynobj> args) {
+    assert(args.size() == 2);
+    
+    dynobj ret;
+    ret.type = INT;
+    ret.vint = args[0] == args[1];
+    return ret;
+}
+
 dynobj print(std::vector<dynobj> args) {
     std::cout << "\033[0;30;46m";
     std::string sep(" ");
@@ -114,11 +202,67 @@ dynobj while_(std::vector<dynobj> args) {
     return ret;
 }
 
+dynobj if_(std::vector<dynobj> args) {
+    dynobj ret;
+    ret.type = NULLT;
+    ret.vnull = NULLREPR;
+    return ret;
+}
+
+std::unordered_map<std::string, dynobj> global_vars;
+
+dynobj setvar(std::vector<dynobj> args) {
+    // (set "disciples" 12);
+    assert(args.size() == 2);
+
+    if (not (args[0].type == STR)) {
+        throw std::runtime_error("variable name must be of string type");
+    }
+
+    global_vars[args[0].vstr]= args[1];
+    
+    dynobj ret;
+    ret.type = NULLT;
+    ret.vnull = NULLREPR;
+    return ret;
+}
+
+dynobj getvar(std::vector<dynobj> args) {
+    // ($ "disciples") -> 12;
+    assert(args.size() == 1);
+
+    if (not (args[0].type == STR)) {
+        throw std::runtime_error("variable name must be of string type");
+    }
+    dynobj var_value = global_vars.at(args[0].vstr);
+    return var_value;
+}
+
+dynobj wait(std::vector<dynobj> args) {
+    sleep(1);
+    dynobj ret;
+    ret.type = NULLT;
+    ret.vnull = NULLREPR;
+    return ret;
+}
+
 const std::unordered_map<std::string, dynobj(*)(std::vector<dynobj>)> functions = {
     {"+", add},
     {"-", subtract},
+    {"<", lessthan},
+    {"%", modulo},
+    {"=", equals},
+    {"*", multiply},
+    
     {"print", print},
+    
     {"while", while_},
+    {"if", if_},
+    
+    {"set", setvar},
+    {"$", getvar},
+
+    {"wait", wait}
 };
 
 void run(node* ast)
@@ -146,7 +290,6 @@ void run(node* ast)
             if (status != INDEX_TOO_BIG) {
                 break;
             }
-
             std::vector<int> last_arg_node_stack(stack);
             last_arg_node_stack.back() --;
             node* last_arg_node = get_with_stack(ast, last_arg_node_stack, &TRASH);
@@ -172,32 +315,66 @@ void run(node* ast)
             std::vector<std::vector<int>> ancestor_control_nodes_stacks;
 
             std::vector<int> search_stack(last_arg_node_stack);
+
+            //print_tree(ast);
+
+            search_stack.pop_back();
             search_stack.pop_back();
 
             while (get_with_stack(ast, search_stack, &TRASH)->v != ROOT) {
 
                 node* potential_control_node = get_with_stack(ast, search_stack, &TRASH);
-                if ((potential_control_node->nodes[0]->v == "if" or potential_control_node->nodes[0]->v == "while") and search_stack != parent_paren_node_stack) {
+                if ((potential_control_node->nodes[0]->v == "if" or potential_control_node->nodes[0]->v == "while")) {
                     ancestor_control_nodes_stacks.push_back(std::vector<int>(search_stack));
+                    //parr<int>(search_stack);
                     ancestor_control_nodes.push_back(potential_control_node);
                 }
                 search_stack.pop_back();
             }
 
-            bool parent_paren_is_top_level = (ancestor_control_nodes.size() == 0);
+            //            std::for_each(ancestor_control_nodes.begin(), ancestor_control_nodes.end(), [](node* n) {print_node(n);});
+            bool all_true = std::all_of(ancestor_control_nodes.begin(), ancestor_control_nodes.end(),
+                                            [](node* n) {return dynobj_is_truthy(n->nodes[1]->D);});
+            bool directly_execute = false;
+            if (ancestor_control_nodes.size() == 1) {
+                if (belongs_to(ancestor_control_nodes[0]->nodes[1], parent_paren_node)) {
+                    directly_execute = true;
+                }
+            } else if (ancestor_control_nodes.size() > 1) {
+                if (belongs_to(ancestor_control_nodes[0]->nodes[1], parent_paren_node)) {
+                    ancestor_control_nodes.erase(ancestor_control_nodes.begin());
+                    all_true = std::all_of(ancestor_control_nodes.begin(), ancestor_control_nodes.end(),
+                                            [](node* n) {return dynobj_is_truthy(n->nodes[1]->D);});
+                }
+            }
+
+            /*
+            // Figure out if the parent_paren is the first arg of a top level control node.
+            if (ancestor_control_nodes.size() == 1) {
+                if (parent_paren_node == ancestor_control_nodes[0]->nodes[1]) {
+                    directly_execute = true;
+                }
+            }
+            */
+
             dynobj r;
-            dynobj(*f)(std::vector<dynobj>) = functions.at(function_node->v);
-            if (parent_paren_is_top_level) {
+            dynobj(*f)(std::vector<dynobj>);
+            try {
+                f = functions.at(function_node->D.vfunction);
+            } catch (std::exception &e) {
+                std::cout << e.what() << "\n";
+                std::cout << "the function name that threw this exception is: " << extract_string_form(function_node->D) << "\n";
+            }
+            if (directly_execute) {
                 r = f(args);
             } else {
-                bool all_true = std::all_of(ancestor_control_nodes.begin(), ancestor_control_nodes.end(),
-                                            [](node* n) {return dynobj_is_truthy(n->nodes[1]->D);});
                 if (all_true) {
                     r = f(args);
                 } else {
                     r = NOT_RAN;
                 }
             }
+
 
             bool cond_was_false = not dynobj_is_truthy(parent_paren_node->nodes[1]->D);
 
@@ -209,7 +386,7 @@ void run(node* ast)
                 while_stack.pop_back();
 
                 node* orig_while_node = get_with_stack(orig_tree, while_stack, &TRASH);
-                print_node(orig_while_node);
+                //print_node(orig_while_node);
                 
                 DFF_TYPE lowers;
                 DFF_TYPE pkg = depth_first_flatten(orig_while_node);
@@ -225,13 +402,21 @@ void run(node* ast)
 
                 node* to_be_replaced_while_node = get_with_stack(ast, while_stack, &TRASH);
                 to_be_replaced_while_node->nodes = {};
+
+                int jj = 0;
                 for (auto b : lowers) {
                     std::vector<int> asdf = std::get<3>(b);
                     asdf.pop_back();
                     node* parent = get_with_stack(to_be_replaced_while_node, asdf, &TRASH);
+                    if (jj == 0) {
+                        assert( parent == to_be_replaced_while_node );
+                    }
+                    jj++;
+                    
                     dynobj D = std::get<0>(b)->D;
                     std::string v = std::get<0>(b)->v;
-                    add_node_dynobj(parent, v, D);
+                    add_node_dynobj(parent, v, D);  // Memory being leaked here:
+                    // The previous nodes that are being replaced are not being freed.
                 }
                 stack.pop_back();
             } else {

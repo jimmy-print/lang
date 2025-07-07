@@ -7,14 +7,16 @@
 
 
 void print_node(node* n) {
-	std::cout << "Node value: " << n->v << " || ";
+	std::cout << "Node value: " << n->v << " " << n << " || ";
 	std::cout << "Nodes: ";
 
 	for (auto n : n->nodes) {
-		std::cout << n->v << " ";
+		std::cout << n->v << " " << n << " ";
 	}
 	std::cout << "\n";
 }
+
+
 
 void print_tree(node* ast) {
     DFF_TYPE pkg = depth_first_flatten(ast);
@@ -22,7 +24,8 @@ void print_tree(node* ast) {
         for (int i = 0; i < std::get<1>(a); i++) {
             std::cout << "-";
         }
-        std::cout << std::get<0>(a)->v << " | " << std::get<0>(a) << "\n";
+        std::cout << std::get<0>(a)->v << " | " << std::get<0>(a) << " | ";
+        parr<int>(std::get<3>(a));
     }
 }
 
@@ -323,5 +326,19 @@ void free_node(node* n) {
 	for (auto tup : all_nodes) {
 		delete std::get<0>(tup);
 	}
+}
 
+bool belongs_to(node* maybe_owner, node* target) {
+    node* rooted_maybe_owner = new node();
+    rooted_maybe_owner->v = "FAKE ROOT";
+    rooted_maybe_owner->nodes.push_back(maybe_owner);
+    rooted_maybe_owner->parent = NULL;
+    
+    DFF_TYPE pkg = depth_first_flatten(rooted_maybe_owner);
+    for (auto a : pkg) {
+        if (std::get<0>(a) == target) {
+            return true;
+        }
+    }
+    return false;
 }
