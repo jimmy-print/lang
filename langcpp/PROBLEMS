@@ -1,3 +1,1 @@
-Right now memory is leaked because new trees keep getting constructed without freeing.
-
-Also I don't like how the v is used to compare nodes with extract_string_form. Basically, v should only be used at the lexing->parsing level to represent the raw code in the .lisp file. After that, D should be used for all representations and comparisons.
+I don't like how the v is used to compare nodes with extract_string_form. Basically, v should only be used at the lexing->parsing level to represent the raw code in the .lisp file. After that, D should be used for all representations and comparisons.

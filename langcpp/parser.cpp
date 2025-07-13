@@ -100,7 +100,7 @@ DFF_TYPE depth_first_flatten(node* root)
 			get_with_stack(root, stack, &new_stat);
 		}
 
-		if (stack == std::vector<int>{root->nodes.size()}) {
+		if (stack == std::vector<int>{(int)root->nodes.size()}) {
 			break;
 		}
 	}
@@ -313,7 +313,7 @@ node* deepcopy_node(node* ast)
             upper_node = upper_node->parent;
 		}
 
-		if (stack == std::vector<int>{ast->nodes.size()}) {
+		if (stack == std::vector<int>{(int)ast->nodes.size()}) {
 			break;
 		}
 	}
@@ -322,7 +322,15 @@ node* deepcopy_node(node* ast)
 }
 
 void free_node(node* n) {
-	DFF_TYPE all_nodes = depth_first_flatten(n);
+    // Fuck this making a fake root and then using it shit.
+    // The actual reason for needing this is that the depth_first_search relies
+    // on a root node. I need to fix that algorithm.
+    node* rooted_maybe_owner = new node();
+    rooted_maybe_owner->v = "FAKE ROOT";
+    rooted_maybe_owner->nodes.push_back(n);
+    rooted_maybe_owner->parent = NULL;
+    
+	DFF_TYPE all_nodes = depth_first_flatten(rooted_maybe_owner);
 	for (auto tup : all_nodes) {
 		delete std::get<0>(tup);
 	}
@@ -337,8 +345,10 @@ bool belongs_to(node* maybe_owner, node* target) {
     DFF_TYPE pkg = depth_first_flatten(rooted_maybe_owner);
     for (auto a : pkg) {
         if (std::get<0>(a) == target) {
+            delete rooted_maybe_owner;
             return true;
         }
     }
+    delete rooted_maybe_owner;
     return false;
 }

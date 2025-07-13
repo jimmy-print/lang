@@ -101,3 +101,29 @@ std::vector<std::string> lex(std::string line)
 
 	return toks;
 }
+
+std::vector<std::string> expand_sigil(std::vector<std::string> toks) {
+    /*
+        {"$", "i"} => {"(", "$", "i", ")"}
+     */
+    std::vector<std::string> new_toks;
+    bool next_iter_dont_push = false;
+
+    unsigned int i = 0;
+    while (i < toks.size()) {
+        if (toks[i] == SIGIL_CHAR_STR) {
+            new_toks.push_back(std::string(1, OPENING_BRACKET_CHAR));
+            new_toks.push_back(SIGIL_CHAR_STR);
+            new_toks.push_back(std::string(1, QUOTE_CHAR) + toks[i + 1] + std::string(1, QUOTE_CHAR));
+            new_toks.push_back(std::string(1, CLOSING_BRACKET_CHAR));
+
+            i += 2;
+        } else {
+            new_toks.push_back(toks[i]);
+
+            i ++;
+        }
+    }
+
+    return new_toks;
+}

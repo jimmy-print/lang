@@ -31,6 +31,7 @@ int main(int argc, char** argv)
                     (std::istreambuf_iterator<char>()));
     stream.close();
 
+
     // Now, remove leading and trailing whitespace from the raw string.
     std::string stripped = strip_leading_and_trailing_whitespace(raw);
 
@@ -56,8 +57,9 @@ int main(int argc, char** argv)
     for (auto line : splitted) {
         std::cout << "Line: " << line << "\n";
         std::vector<std::string> toks = lex(line);
+        std::vector<std::string> expanded_toks = expand_sigil(toks);
+        node* ast = make_ast(expanded_toks);
 
-        node* ast = make_ast(toks);
         convert_to_typed(ast);
         run(ast);
     }

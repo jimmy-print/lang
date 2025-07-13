@@ -316,8 +316,6 @@ void run(node* ast)
 
             std::vector<int> search_stack(last_arg_node_stack);
 
-            //print_tree(ast);
-
             search_stack.pop_back();
             search_stack.pop_back();
 
@@ -401,6 +399,9 @@ void run(node* ast)
                 }
 
                 node* to_be_replaced_while_node = get_with_stack(ast, while_stack, &TRASH);
+                for (auto n : to_be_replaced_while_node->nodes) {
+                    free_node(n);
+                }
                 to_be_replaced_while_node->nodes = {};
 
                 int jj = 0;
@@ -415,19 +416,23 @@ void run(node* ast)
                     
                     dynobj D = std::get<0>(b)->D;
                     std::string v = std::get<0>(b)->v;
-                    add_node_dynobj(parent, v, D);  // Memory being leaked here:
-                    // The previous nodes that are being replaced are not being freed.
-                }
+                    add_node_dynobj(parent, v, D);                }
                 stack.pop_back();
             } else {
                 parent_paren_node->D = r;
                 parent_paren_node->v = extract_string_form(parent_paren_node->D);
-                                                                   
+                for (auto n : parent_paren_node->nodes) {
+                    free_node(n);
+                }
                 parent_paren_node->nodes = {};
                 stack.pop_back();
                 stack.back() ++;
             }
         }
     }
+
+
+    free_node(orig_tree);
+    free_node(ast);
 }
 

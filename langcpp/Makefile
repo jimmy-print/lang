@@ -10,6 +10,12 @@ SRCS_TESTING=tests.cpp utils.cpp lexer.cpp parser.cpp execute.cpp
 # deal with the entry point, running the interpreter itself.
 # Functions that are unit tested should be in other files.
 
+emcc: 
+	emcc -o a.html a.cpp
+
+emcclang: $(SRCS) $(HDRS)
+	emcc -o lang.html $(SRCS) -Wall -std=c++17 -g
+
 lang: $(SRCS) $(HDRS)
 	$(CC) -o lang $(SRCS) -Wall -std=c++17 -g
 

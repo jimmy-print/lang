@@ -11,6 +11,8 @@
 #define CLOSING_BRACKET_CHAR ')'
 #define LINE_SEPARATOR_CHAR ';'
 
+#define SIGIL_CHAR_STR "$"
+
 static const std::set<char> allowed_exposed_chars = {
 	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
