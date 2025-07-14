@@ -131,6 +131,7 @@ def iterate_through_node_not_root(starting_node):
 
 
 def new_get_vis_stack_str(root_node, printid=False):
+    '''For non root trees'''
     out = []
     for elem in iterate_through_node_not_root(root_node):
         out.append('|'+dupe(DEPTH_CHAR, elem[0])+str(elem[1]))
@@ -192,8 +193,7 @@ def get_function(c):
     modulo = lambda iterable: iterable[0] % iterable[1]
 
     def print_(iterable):
-        format_string = iterable[0]
-        print(format_string.format(*iterable[1:]))
+        print(*iterable, sep="")
         return None
     def input_(iterable):
         format_string = iterable[0]
@@ -250,7 +250,7 @@ def get_function(c):
         return function
 
 
-def run(root_node):
+def run(root_node, getting=False):
     elems_with_OPENING_BRACKET = list(thru_giving_depth(root_node))
     elems_with_OPENING_BRACKET.pop(0)
 
@@ -294,6 +294,8 @@ def run(root_node):
         past_layer = elem[0]
 
     orig_tree = deepcopy(tree)
+    if getting:
+        return tree
 
     # Execute on the AST.
     stack = [0]

@@ -1,17 +1,17 @@
 (set "n" 1);
 
-(while (< ($ "n") 10000)
+(while (< $n 10000)
     (set "i" 2)
 
     (set "prime" "none")
 
-    (while (< ($ "i") ($ "n"))
-        (if (= (% ($ "n") ($ "i")) 0)
+    (while (< $i $n)
+        (if (= (% $n $i) 0)
             (set "prime" "no"))
-        (set "i" (+ ($ "i") 1)))
+        (set "i" (+ $i 1)))
 
-    (if (= ($ "prime") "none")
+    (if (= $prime "none")
         (set "prime" "yes")
 
-        (print "{}{}" ($ "n") ($ "prime")))
-    (set "n" (+ ($ "n") 1)));
+        (print "{}{}" $n $prime))
+    (set "n" (+ $n 1)));

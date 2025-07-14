@@ -96,3 +96,53 @@ function draw() {
 }
 
 setInterval(draw, 30);
+
+
+var cv2 = document.getElementById("secondcanvas");
+cv2.setAttribute('width', cv2.offsetWidth);
+cv2.setAttribute('height', cv2.offsetHeight);
+var c2 = cv2.getContext("2d");
+
+var coords = [];
+var lines = [];
+function run() {
+    $.ajax({
+        url: "receive",
+        type: "POST",
+        data: {
+            code: $("#codeinputbox").val()
+        },
+        success: function (response) {
+                //service.php response
+                console.log(response);
+                coords = response.coords;
+                lines = response.lines;
+        }
+    });
+}
+
+var node_size = 15;
+function drawsecond() {
+    c2.clearRect(0, 0, cv2.width, cv2.height);
+
+    coords.forEach(function(coord) {
+        c2.beginPath();
+        c2.rect(coord[0], coord[1], node_size, node_size);
+        c2.fillStyle = '#FC6C85';
+        c2.fill();
+
+        c2.fillStyle = '#222222';
+        c2.fillText(coord[2], coord[0], coord[1]);
+    });
+
+    lines.forEach(function(line) {
+        c2.beginPath();
+        c2.moveTo(line[0][0], line[0][1]);
+        c2.lineTo(line[1][0], line[1][1]);
+        c2.lineWidth = 1;
+        c2.stroke();
+    });
+}
+
+setInterval(drawsecond, 100);
+

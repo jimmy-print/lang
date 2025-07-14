@@ -7,7 +7,10 @@ from atoms import *
 OPENING_BRACKET = '('
 CLOSING_BRACKET = ')'
 
+QUOTE_CHAR = '"'
+
 COMMENT_PREFIX = '#'
+SIGIL_CHAR_STR = '$'
 assert len(COMMENT_PREFIX) == 1
  
 
@@ -72,57 +75,89 @@ def compress_whitespace(s: str):
                 pass
             else:
                 out.append(tmp)
-
+    print(repr(s))
     out.append(s[-1])
     return ''.join(out)
 
+allowed_exposed_chars = [
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+	'1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+	'_',
+    '.',
+]
 
-def get_tokens(s):
-    split = s.strip().split()
+operator_chars = [
+	'+', '-', '*', '/',
+	'!',
+	'<', '>',
+	'$',
+    '%',
+	'=',
+]
+def get_tokens(expression):
+    processing_a_string = False
+    on_last_char = False
 
-    for i, tok in enumerate(split):
-        if not is_whitespace(tok):
-            split[i] = tok
+    tok = ""
+    toks = []
+    for i, char in enumerate(expression):
+        try:
+            next_char = expression[i + 1]
+        except IndexError:
+            pass
+        if i + 1 == len(expression):
+            on_last_char = True
 
-    def remove_all_instances_of_right_paren(string):
-        out = []
-        for c in string:
-            if c != ')':
-                out.append(c)
-        return ''.join(out)
+        i += 1
+        cut_off_tok = False
 
-    out = []
+        if char == QUOTE_CHAR:
+            processing_a_string = not processing_a_string
 
-    # Check if (add 1 1 ) or ( add 1 1) or ( add 1 1 )
-    for tok in split:
-        if tok == ')' or tok == '(':
-            raise LangError(
-                'Opening and closing brackets must be attached without spaces '
-                'to functions and last arguments, respectively.')
-
-    for tok in split:
-        if ')' not in tok:
-            out.append(tok)
+        if processing_a_string:
+            tok += char
+            if on_last_char:
+                raise RuntimeError("unbalanced closing apostrophe")
+            if next_char == QUOTE_CHAR:
+                tok += QUOTE_CHAR
+                cut_off_tok = True
         else:
-            out.append(remove_all_instances_of_right_paren(tok))
-            len_of_right_paren = 0
-            for c in tok:
-                if c == ')':
-                    len_of_right_paren += 1
-            for _ in range(len_of_right_paren):
-                out.append(')')
+            if char == OPENING_BRACKET or char == CLOSING_BRACKET:
+                tok += char
+                cut_off_tok = True
+            if char in allowed_exposed_chars:
+                tok += char
+                if on_last_char:
+                    cut_off_tok = True
+                else:
+                    if next_char not in allowed_exposed_chars:
+                        cut_off_tok = True
+            if char in operator_chars:
+                tok += char
+                cut_off_tok = True
+        if cut_off_tok:
+            toks.append(tok)
+            tok = ""
+    return toks
 
-    outout = []
-    for tok in out:
-        if OPENING_BRACKET in tok:
-            outout.append(OPENING_BRACKET)
-            outout.append(tok[1:len(tok)])
+def expand_sigil(toks):
+    new_toks = []
+    next_iter_dont_push = False
+    i = 0
+    while i < len(toks):
+        if toks[i] == SIGIL_CHAR_STR:
+            new_toks.append(OPENING_BRACKET)
+            new_toks.append(SIGIL_CHAR_STR)
+            new_toks.append(f"{QUOTE_CHAR}{toks[i + 1]}{QUOTE_CHAR}")
+            new_toks.append(CLOSING_BRACKET)
+
+            i += 2
         else:
-            outout.append(tok)
-
-    return outout
-
-
+            new_toks.append(toks[i])
+            i += 1
+    return new_toks
+            
 def get_tree(tokens):
     tree = Root()
 
@@ -180,17 +215,10 @@ if __name__ == '__main__':
         exprs.append(also_no_redundant_spaces)
 
     for n, line in enumerate(exprs):
-        #interpreter_print(f'{n} {line}')
+        tokens = expand_sigil(get_tokens(line))
+        tokens_wo_whitespace = filter(lambda token: not is_whitespace(token), tokens)
+        tree = get_tree(tokens_wo_whitespace)
 
-        tokens = get_tokens(line)
-
-        toktok = []
-        for tok in tokens:
-            if not is_whitespace(tok):
-                toktok.append(tok)
-
-        tree = get_tree(toktok)
-        #interpreter_print(get_vis_stack_str(tree))
         run(tree)
         print()
 

@@ -1,3 +1,5 @@
-(set "i" 0);
-(while (+ 1 1)
-    (print "{}" ($ "i")));
+(set "i" 1);
+(while (< $i 10)
+    (print $i)
+    (set "i" (+ $i 1)
+);
