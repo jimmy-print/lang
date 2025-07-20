@@ -5,9 +5,21 @@
     padding-bottom: 2rem;
 }
 
+#footer {
+    margin-top: 2rem;
+width: 100%;
+    background-color: lightgrey;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+#footer p {
+    font-size: 0.8rem;
+}
+
 
 #body {
-    padding-top: 2rem;
+
 }
 
 .center{
@@ -27,6 +39,17 @@ h1 {
     color: white;
     font-size: 1.5rem;
 }
+
+#body p {
+
+}
+
+#towriteinto {
+    background-color: black;
+    color: #00FF00;
+
+}
+
 
 body {
     font-family: Arial;
@@ -56,12 +79,13 @@ flex-grow: 1;
 #secondcanvas {
         background-color: #eeeeee;
         width: 100%;
-        height: 100%;
 }
-#body p {
-    font-size: 1rem;
-    margin-top: 0px;
-    margin-bottom: 0.5rem;
+
+#body h3 {
+    margin-top: 2rem;
+    margin-bottom: 10px;
+
+    font-size: 1.1rem;
 }
 
 
@@ -102,6 +126,7 @@ flex-grow: 1;
 #runbutton:hover {
 
 }
+
 
 
 

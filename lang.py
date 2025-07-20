@@ -219,6 +219,6 @@ if __name__ == '__main__':
         tokens_wo_whitespace = filter(lambda token: not is_whitespace(token), tokens)
         tree = get_tree(tokens_wo_whitespace)
 
-        run(tree)
+        run(transform_ast(tree))
         print()
 

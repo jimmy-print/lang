@@ -1,0 +1,86 @@
+<html>
+
+  <head>
+    <link rel="stylesheet" href="static/styles.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="shortcut icon" href="static/favicon.ico">
+  </head>
+
+  <body>
+
+
+    <div id="header">
+      <div class="center">
+        <h1 id="mainheader">L--;</h1>
+        <p id="headerdesc">Visual interpreter for a simple lisp-style programming language.</p>
+        <canvas id="canvas">
+      </div>
+    </div>
+
+    <div id="body" class="center">
+
+      <div class="flexcontainer">
+
+        <div id="codeinputareadiv">
+          <h3>Code input area</h3>
+          <textarea id="codeinputbox" rows="20" cols="35">
+            (if 1
+            (set "i" 0)
+            (while (< $i 10)
+                      (print $i)
+                      (set "i" (+ $i 1))
+                      ));
+
+(if 1 (set "name" "jimmy")(set "age" 100));
+                      </textarea>
+
+        </div>
+        <div id="rundiv">
+          <button id="runbutton" onclick="run()">Load program</button>
+        </div>
+        <div id="visualiserdiv">
+          <h3>Visualiser</h3>
+          <canvas id="secondcanvas"></canvas>
+        </div>
+      </div>
+
+      <div class="flexcontainer">
+
+        <div id="examplecodebox">
+          <h3> Example code </h3>
+          <p>Hello world program<br><code>
+              (print "hello, world!");<br>
+              <br>
+            </code>
+          <p>Program to calculate factorial of 10<br>
+            <code>
+              (set "x" 10);<br>
+              (set "t" 1);<br>
+              (set "i" 1);<br>
+              (while (! (= $i (+ $x 1)))<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;     (set "t" (* $t $i))<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;    (set "i" (+ $i 1)));<br>
+              (print "factorial of " $x " is " $t); <br>
+          </code></p>
+        </div>
+
+        <div id="terminal">
+          <h3>Terminal</h3>
+          <div id="towriteinto"></div>
+        </div>
+      </div>
+
+
+
+    </div>
+<div id="footer">
+      <div class="center">
+        <a href="https://github.com/jimmy-print/lang">https://github.com/jimmy-print/lang</a>
+        <p>And seeing that it was a soft October night,<br>Curled once about the house, and fell asleep.</p>
+      </div>
+    </div>
+  </body>
+
+
+  <script src="static/a.js"></script>
+</html>

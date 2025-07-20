@@ -1,11 +1,12 @@
 import flask
+import copy
 import lang, atoms
 
 app = flask.Flask(__name__)
 
 @app.route('/')
 def main():
-    return flask.render_template('a.html')
+    return flask.render_template('index.html')
 
 @app.route('/receive', methods=['POST'])
 def proc():
@@ -13,7 +14,21 @@ def proc():
     raw_code = tuple(gen)[0]
     return generate_visual_representation(raw_code)
 
+stack = [0]
+@app.route('/next', methods=['GET'])
+def next():
+    global global_tree, orig_global_tree, stack
+    orig_global_tree = copy.deepcopy(global_tree)
+    global_tree, stack = atoms.run_onestep(global_tree, orig_global_tree, stack)
+    return {'stack': stack[1:len(stack)], 'global_variables': atoms.global_variables}  # because in below func, coords is based on the expansion
+    # of a tree that has had its root node removed, unlike global_tree
+
 def generate_visual_representation(raw_code):
+    global global_tree
+
+    # TODO: *breadth* first search should allow for detection of neighbouring node
+    # (on the same level) collisions, which would allow for 'perfect' non-intersecting
+    # graph visualisations.
     raw_code_wo_front_back_whitespace = raw_code.strip()
     raw_exprs = raw_code_wo_front_back_whitespace.split(';')
     if raw_exprs[-1] == '':
@@ -30,15 +45,17 @@ def generate_visual_representation(raw_code):
     tokens = lang.expand_sigil(lang.get_tokens(line))
     tokens_no_whitespace = filter(lambda token: not lang.is_whitespace(token), tokens)
     tree = lang.get_tree(tokens_no_whitespace)
-    unrooted_tree = atoms.run(tree, getting=True)
+    unrooted_tree = atoms.transform_ast(tree)
+
+    global_tree = copy.deepcopy(unrooted_tree)
     unrooted_tree = unrooted_tree.nodes[0]
     print(atoms.new_get_vis_stack_str(unrooted_tree))
     pkg = atoms.iterate_through_node_not_root(unrooted_tree) 
     depth = max(i[0] for i in pkg)
 
     x = 200
-    y = 0
-    min_vert_step = 75
+    y = 30
+    min_vert_step = 65
 
     horz_step = None
     vert_step = None
@@ -49,12 +66,16 @@ def generate_visual_representation(raw_code):
     max_horzs = [200]
     eager = list(atoms.iterate_through_node_not_root(unrooted_tree))
     for i, DFF in enumerate(atoms.iterate_through_node_not_root(unrooted_tree)):
+        if DFF[1] == atoms.INDEX_TOO_BIG:
+            assert i == len(eager) - 1
+            break
+
+
         if i != 0:
             last_depth = eager[i - 1][0]
         else:
             last_depth = DFF[0]
         depth = DFF[0]
-        print(DFF)
 
         if depth > last_depth:
             max_horzs.append(max_horzs[-1] - 40)
@@ -69,12 +90,11 @@ def generate_visual_representation(raw_code):
             x -= horz_step
 
             xs.append(x)
-            print(x)
 
 
             y += min_vert_step * (depth - last_depth)
         elif depth < last_depth:
-            print('\t', DFF)
+
             #horz_step = max_horz_step / len(DFF[1].parent.nodes)
             length = len(DFF[1].parent.nodes)
             [max_horzs.pop() for i in range(last_depth - depth)]
@@ -88,7 +108,7 @@ def generate_visual_representation(raw_code):
             y -= min_vert_step * (last_depth - depth)
 
             [xs.pop() for i in range(last_depth - depth)]
-            print(xs[-1])
+
             x = xs[-1] + horz_step
             xs[-1] = x
         else:
@@ -101,7 +121,7 @@ def generate_visual_representation(raw_code):
             x += horz_step
             xs[-1] = x
 
-        coords.append((x, y, DFF[1].v))
+        coords.append((x, y, DFF[1].v, tuple(DFF[3])      ))
 
     for i, (coord, DFF) in enumerate(zip(coords, atoms.iterate_through_node_not_root(unrooted_tree))):
         parent_node = DFF[1].parent
