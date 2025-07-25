@@ -1,0 +1,14 @@
+(set 1 2)
+Technically allowed in lang but will lead to
+  File "/usr/lib/python3.8/json/encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+TypeError: '<' not supported between instances of 'int' and 'str' 
+
+As flask will attempt to parse global_variables = {1:2} into json, where integer keys aren't allowed.
+
+
+Various things to do with 'resetting'
+i.e. when program has been completely executed, need to load new program and reset
+variables, on_line, etc
+rn cannot reset anything
+page reload also doesnt reset any server side variables, which fucks shit up.

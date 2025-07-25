@@ -1,55 +1,72 @@
 import flask
 import copy
 import lang, atoms
+import traceback
+from atoms import OnestepFinishedExecution, FinishedExecution
+from atoms import OnestepFinishedExecutionNoPrint
 
 app = flask.Flask(__name__)
 
 @app.route('/')
 def main():
     return flask.render_template('index.html')
-
+on_line = None
 @app.route('/receive', methods=['POST'])
 def proc():
-    gen = flask.request.form.values()
+    gen = tuple(flask.request.form.values())
+
     raw_code = tuple(gen)[0]
-    return generate_visual_representation(raw_code)
+    on_line = tuple(gen)[1]
+
+    assert int(on_line) >= 0
+    on_line = int(on_line)
+
+
+    if on_line == 0:
+        return generate_visual_representation(raw_code)
+    elif on_line >= 0:
+        return all_code_vis
 
 stack = [0]
-@app.route('/next', methods=['GET'])
+@app.route('/next', methods=['POST'])
 def next():
-    global global_tree, orig_global_tree, stack
-    orig_global_tree = copy.deepcopy(global_tree)
-    global_tree, stack = atoms.run_onestep(global_tree, orig_global_tree, stack)
-    return {'stack': stack[1:len(stack)], 'global_variables': atoms.global_variables}  # because in below func, coords is based on the expansion
-    # of a tree that has had its root node removed, unlike global_tree
+    global tree, orig_tree, stack
 
-def generate_visual_representation(raw_code):
-    global global_tree
+    gen = flask.request.form.values()
+    tuplegen = tuple(gen)
 
-    # TODO: *breadth* first search should allow for detection of neighbouring node
-    # (on the same level) collisions, which would allow for 'perfect' non-intersecting
-    # graph visualisations.
-    raw_code_wo_front_back_whitespace = raw_code.strip()
-    raw_exprs = raw_code_wo_front_back_whitespace.split(';')
-    if raw_exprs[-1] == '':
-        raw_exprs.pop()
+    on_line = tuplegen[0]
+    on_line = int(on_line)
+    
+    tree = all_code_ast[on_line]['tree']
+    orig_tree = all_code_ast[on_line]['orig_tree']
+    
+    try:
+        atoms.run_onestep(tree, orig_tree, stack)
+    except OnestepFinishedExecutionNoPrint as e:
+        return {'status': e.status,
+                'stack': stack[1:len(stack)],
+                'print_msg': -1,
+                'global_variables': atoms.global_variables}
+        # because in below func, coords is based on the expansion
+        # of a tree that has had its root node removed, unlike global_tree
+    except OnestepFinishedExecution as e:
+        return {'status': e.status,
+                'stack': stack[1:len(stack)],
+                'print_msg': str(e),
+                'global_variables': atoms.global_variables}
+    except FinishedExecution as e:
+        stack = [0]
+        return {'status': e.status,
+                'stack': None,
+                'print_msg': None,
+                'global_variables': atoms.global_variables}
+    else:
+        print('Oh no')
 
-    exprs = []
-    for raw_expr in raw_exprs:
-        no_newlines = lang.rm_char_instances(raw_expr, '\n')
-        also_no_redundant_spaces = lang.compress_whitespace(no_newlines)
-        exprs.append(also_no_redundant_spaces)
 
-    # just handle the first expr for now.
-    line = exprs[0]
-    tokens = lang.expand_sigil(lang.get_tokens(line))
-    tokens_no_whitespace = filter(lambda token: not lang.is_whitespace(token), tokens)
-    tree = lang.get_tree(tokens_no_whitespace)
-    unrooted_tree = atoms.transform_ast(tree)
 
-    global_tree = copy.deepcopy(unrooted_tree)
-    unrooted_tree = unrooted_tree.nodes[0]
-    print(atoms.new_get_vis_stack_str(unrooted_tree))
+def get_coords_and_lines_from_transformed_unrooted_tree(unrooted_tree):
     pkg = atoms.iterate_through_node_not_root(unrooted_tree) 
     depth = max(i[0] for i in pkg)
 
@@ -127,7 +144,6 @@ def generate_visual_representation(raw_code):
         parent_node = DFF[1].parent
         try:
             ii = [i[1] for i in atoms.iterate_through_node_not_root(unrooted_tree)].index(parent_node)
-            print(ii)
             lines.append(
             (
                 coord, coords[ii]
@@ -136,4 +152,59 @@ def generate_visual_representation(raw_code):
             pass
 
 
-    return {'coords':coords, 'lines':lines}
+    return coords, lines
+
+all_code_ast = []
+all_code_vis = []
+
+def generate_visual_representation(raw_code):
+
+    # TODO: *breadth* first search should allow for detection of neighbouring node
+    # (on the same level) collisions, which would allow for 'perfect' non-intersecting
+    # graph visualisations.
+    raw_code_wo_front_back_whitespace = raw_code.strip()
+    raw_exprs = raw_code_wo_front_back_whitespace.split(';')
+    if raw_exprs[-1] == '':
+        raw_exprs.pop()
+
+    exprs = []
+    for raw_expr in raw_exprs:
+        no_newlines = lang.rm_char_instances(raw_expr, '\n')
+        also_no_redundant_spaces = lang.compress_whitespace(no_newlines)
+        exprs.append(also_no_redundant_spaces)
+
+
+    for line in exprs:
+        tokens = lang.expand_sigil(lang.get_tokens(line))
+        tokens_no_whitespace = filter(lambda token: not lang.is_whitespace(token), tokens)
+
+
+        rooted_tree = lang.get_tree(tokens_no_whitespace)
+        transformed_tree = atoms.transform_ast(rooted_tree)
+        unrooted_tree = transformed_tree.nodes[0]
+        
+        tree_ = copy.deepcopy(transformed_tree)
+        orig_tree_ = copy.deepcopy(tree_)
+
+        coords, lines = get_coords_and_lines_from_transformed_unrooted_tree(unrooted_tree)
+
+        all_code_ast.append(
+            {
+                'tree': tree_,
+                'orig_tree': orig_tree_,
+             })
+        all_code_vis.append(
+            {
+             'coords': coords,
+             'lines': lines,
+             })
+
+    return all_code_vis
+    
+
+
+if __name__ == '__main__':
+    try:
+        app.run()
+    except Exception:
+        traceback.print_exc()

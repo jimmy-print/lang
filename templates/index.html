@@ -24,19 +24,19 @@
         <div id="codeinputareadiv">
           <h3>Code input area</h3>
           <textarea id="codeinputbox" rows="20" cols="35">
-            (if 1
-            (set "i" 0)
-            (while (< $i 10)
-                      (print $i)
-                      (set "i" (+ $i 1))
-                      ));
+            (set "n" 1);
 
-(if 1 (set "name" "jimmy")(set "age" 100));
+            (while (< $n 3)
+                      (print $n)
+                      (set "n" (+ $n 1)));
+
+
+            
                       </textarea>
 
         </div>
         <div id="rundiv">
-          <button id="runbutton" onclick="run()">Load program</button>
+          <button class="runbutton" onclick="run()">Load program</button>
         </div>
         <div id="visualiserdiv">
           <h3>Visualiser</h3>
@@ -50,8 +50,9 @@
           <h3> Example code </h3>
           <p>Hello world program<br><code>
               (print "hello, world!");<br>
-              <br>
-            </code>
+          </code></p>
+                              <button class="copybutton">Copy into code box</button>
+
           <p>Program to calculate factorial of 10<br>
             <code>
               (set "x" 10);<br>
@@ -62,6 +63,8 @@
               &nbsp;&nbsp;&nbsp;&nbsp;    (set "i" (+ $i 1)));<br>
               (print "factorial of " $x " is " $t); <br>
           </code></p>
+                    <button class="copybutton">Copy into code box</button>
+
         </div>
 
         <div id="terminal">

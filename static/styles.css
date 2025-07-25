@@ -90,7 +90,7 @@ flex-grow: 1;
 
 
 /* CSS */
-#runbutton {
+.runbutton {
   background-image: linear-gradient(-180deg, #0300dd 0%, #2e2afc 100%);
   border-radius: .3rem;
   box-sizing: border-box;
@@ -113,7 +113,9 @@ flex-grow: 1;
   touch-action: manipulation;
 }
 
-#runbutton:hover {
+
+
+.runbutton:hover {
   background-image: linear-gradient(-180deg, #020089 0%, #2a28a8 100%);
 }
 

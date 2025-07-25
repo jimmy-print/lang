@@ -15,6 +15,13 @@ NOT_RAN = 'NOT_RAN'
 
 global_variables = {}
 
+class OnestepFinishedExecutionNoPrint(Exception):
+    status = 'onestep finished no print'
+class OnestepFinishedExecution(Exception):
+    status = 'onestep finished'
+class FinishedExecution(Exception):
+    status = 'whole line finished'
+
 
 INTERPRETER_PREFIX = '@'
 # when we are running a file, sometimes we want each line to be printed
@@ -178,6 +185,7 @@ def index(root_node, i):
 
 
 def get_function(c):
+    global print_
     plus = sum
     def minus(iterable):
         return iterable[0] - iterable[1]
@@ -410,11 +418,16 @@ def run(tree):
 
 
 def run_onestep(tree, orig_tree, stack):
+    print_msg = None
     while stack != [1]:
         stack.append(0)
+
         if issubclass(type(get_with_stack(tree, stack)), Node):
-            #continue
-            return tree, stack
+            if print_msg is None:
+                raise OnestepFinishedExecutionNoPrint
+            else:
+                raise OnestepFinishedExecution
+        
         elif get_with_stack(tree, stack) == NO_NODES:
             stack.pop()
         stack[-1] += 1
@@ -464,12 +477,17 @@ def run_onestep(tree, orig_tree, stack):
             if not ancestor_control_nodes:
                 parent_func_is_toplevel = True
 
+            print_msg = None
             if parent_func_is_toplevel:
                 r = f(args)
+                if f == print_:
+                    print_msg = ''.join([str(arg) for arg in args])
             else:
                 all_ancestor_control_first_args_are_true = all(ancestor_control_node.nodes[0].v for ancestor_control_node in ancestor_control_nodes)
                 if all_ancestor_control_first_args_are_true:
                     r = f(args)
+                    if f == print_:
+                        print_msg = ''.join([str(arg) for arg in args])
                 else:
                     r = NOT_RAN
 
@@ -498,6 +516,7 @@ def run_onestep(tree, orig_tree, stack):
                     parent.add(cl(val,None))
 
                 stack.pop()
+
             else:  # so a normal function falling off or an if function falling off
                 parent_func_node.v = r
                 parent_func_node.nodes = []
@@ -505,8 +524,13 @@ def run_onestep(tree, orig_tree, stack):
                 stack.pop()
                 stack[-1] += 1
 
+        if print_msg is None:
+            raise OnestepFinishedExecutionNoPrint
+        else:
+            raise OnestepFinishedExecution(print_msg)
+                
     assert len(tree.nodes) == 1
-    return tree.nodes[0].v
+    raise FinishedExecution
 
 
 

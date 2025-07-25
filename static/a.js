@@ -103,31 +103,41 @@ cv2.setAttribute('width', cv2.offsetWidth);
 cv2.setAttribute('height', $("#codeinputbox").height());
 var c2 = cv2.getContext("2d");
 
+//var coords = [];
+//var lines = [];
+var Response = [];
+var on_line = 0;
 var coords = [];
 var lines = [];
 var jj = 0;
-function run() {
+function print_msg(msg) {
     var box = $("#towriteinto");
     var alr_there = $("#towriteinto span").length;
     var max_msgs = 10;
     if (alr_there < max_msgs) {
-        box.append(`<span>${jj}th Test msg<br></span>`);
+        box.append(`<span>${msg}<br></span>`);
     } else {
         $("#towriteinto span").first().remove();
-        box.append(`<span>${jj}th Test msg<br></span>`);
+        box.append(`<span>${msg}<br></span>`);
     }
     jj++;
+}
+
+function run() {
+    
     $.ajax({
         url: "receive",
         type: "POST",
         data: {
-            code: $("#codeinputbox").val()
+            code: $("#codeinputbox").val(),
+            on_line: on_line,
         },
         success: function (response) {
             //service.php response
             console.log(response);
-            coords = response.coords;
-            lines = response.lines;
+            Response = response;
+            coords = Response[on_line].coords;
+            lines = Response[on_line].lines;
         }
     });
 }
@@ -198,7 +208,7 @@ function point_in_tri(x1, y1, x2, y2, x3, y3, x, y) {
 }
 var started_running = false;
 var on_stack;
-var global_variables;
+var global_variables = [];
 function drawsecond() {
     mouse_canvas_x = pos_x - dox;
     mouse_canvas_y = pos_y - doy;
@@ -272,20 +282,41 @@ function drawsecond() {
     if (point_in_tri(run_x, run_y, run_x, run_y + run_height, run_x + run_width, run_y + run_height / 2, pos_x, pos_y)) {
         c2.fillStyle = '#00AA00';
         document.body.style.cursor = 'grab';
-
-        if (clicking && !got5) {
+        if (clicking && !got5 && !(coords.length === 0) && !(lines.length === 0)) {
             $.ajax({
                 url: "next",
-                type: "GET",
+                type: "POST",
                 data: {
-
+                    on_line
                 },
                 success: function (response) {
                     //service.php response
                     console.log(response);
-                    started_running = true;
-                    on_stack = response.stack;
-                    global_variables = response.global_variables;
+                    
+                    if (response.status == "whole line finished") {
+                        console.log("whole line finished");
+                        on_line ++;
+                        if (on_line == Response.length) {
+                            Response = [];
+                            coords = [];
+                            lines = [];
+                            on_line = 0;
+                        } else if (on_line < Response.length) {
+                            run()
+                        }
+                    } else if (response.status == "onestep finished no print") {
+                        started_running = true;
+                        on_stack = response.stack;
+                        global_variables = response.global_variables;
+                    }
+                      else if (response.status == "onestep finished") {
+                        started_running = true;
+                        on_stack = response.stack;
+                          global_variables = response.global_variables;
+                          print_msg(response.print_msg);
+                    } else {
+                        console.warn("status");
+                    }
                 }
             });
             got5 = true;
@@ -355,7 +386,6 @@ function drawsecond() {
         c2.fillText(`${key} = ${global_variables[key]}`, 350 - dox, 25 + stepstep*k - doy);
         k++;
     });
-
 }
 
 var FPS = 30;
