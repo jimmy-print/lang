@@ -237,12 +237,12 @@ def get_function(c):
         'while': while_,
 
         'set': set,
-#        '$': get,
+        '$': get,
         'get': get,
 
         'int': int_,
 
-        'wait': wait,
+#        'wait': wait,
 
         '!': not_,
     }

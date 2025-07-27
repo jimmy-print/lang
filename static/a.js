@@ -408,3 +408,12 @@ function drawsecond() {
 var FPS = 30;
 setInterval(drawsecond, 1000/FPS);
 
+
+copybuttons = $(".copybutton")
+for (var i = 0; i < copybuttons.length; i++) {
+   let ii = i;  // capture lambda problem solution
+    copybuttons[i].onclick = (()=>{
+        var code = copybuttons[ii].parentElement.children[0].innerText;
+        $("#codeinputbox").text(code);
+    });
+}
