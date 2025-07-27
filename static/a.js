@@ -123,21 +123,38 @@ function print_msg(msg) {
     jj++;
 }
 
-function run() {
-    
+let NEXT_LINE = 'NEXT_LINE';
+let START_NEW_PROGRAM = 'START_NEW_PROGRAM';
+
+let CLEAR_VARIABLES = 'CLEAR_VARIABLES';
+let KEEP_VARIABLES = 'KEEP_VARIABLES';
+function run(type_) {
+    // Type can either be 'next line' (> button leading to a new line)
+    // or 'start new program' (a button press i.e. a whole new program loaded.)
     $.ajax({
         url: "receive",
         type: "POST",
         data: {
             code: $("#codeinputbox").val(),
             on_line: on_line,
+            type_: type_
         },
-        success: function (response) {
+        success: function (resp) {
             //service.php response
-            console.log(response);
-            Response = response;
-            coords = Response[on_line].coords;
-            lines = Response[on_line].lines;
+            console.log(resp);
+            Response = resp;
+
+            if (Response.variables_action == CLEAR_VARIABLES) {
+                var datemod = new Date()
+                print_msg(`*** L-- ${datemod.toLocaleString()} Program loaded ***`);
+                global_variables = [];
+                on_line = 0;
+                on_stack = [0];
+                started_running = false;
+            }
+            coords = Response.data[on_line].coords;
+            lines = Response.data[on_line].lines;
+
         }
     });
 }
@@ -296,13 +313,13 @@ function drawsecond() {
                     if (response.status == "whole line finished") {
                         console.log("whole line finished");
                         on_line ++;
-                        if (on_line == Response.length) {
+                        if (on_line == Response.data.length) {
                             Response = [];
                             coords = [];
                             lines = [];
                             on_line = 0;
-                        } else if (on_line < Response.length) {
-                            run()
+                        } else if (on_line < Response.data.length) {
+                            run(NEXT_LINE)
                         }
                     } else if (response.status == "onestep finished no print") {
                         started_running = true;

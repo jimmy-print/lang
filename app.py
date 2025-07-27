@@ -4,30 +4,61 @@ import lang, atoms
 import traceback
 from atoms import OnestepFinishedExecution, FinishedExecution
 from atoms import OnestepFinishedExecutionNoPrint
+from atoms import global_variables
 
 app = flask.Flask(__name__)
+
+# GLOBALS
+on_line = None
+stack = [0]
+all_code_ast = []
+all_code_vis = []
+
 
 @app.route('/')
 def main():
     return flask.render_template('index.html')
-on_line = None
+
+
+NEXT_LINE = 'NEXT_LINE'
+START_NEW_PROGRAM = 'START_NEW_PROGRAM'
+
+CLEAR_VARIABLES = 'CLEAR_VARIABLES'
+KEEP_VARIABLES = 'KEEP_VARIABLES'
 @app.route('/receive', methods=['POST'])
 def proc():
+    global on_line, stack, all_code_ast, all_code_vis, global_variables
     gen = tuple(flask.request.form.values())
 
-    raw_code = tuple(gen)[0]
-    on_line = tuple(gen)[1]
+    raw_code = gen[0]
+    on_line = gen[1]
+    type_ = gen[2]
 
     assert int(on_line) >= 0
     on_line = int(on_line)
 
+    if type_ == START_NEW_PROGRAM:
+        all_code_ast = []
+        all_code_vis = []
+        atoms.global_variables = {}        
+        on_line = 0
+        resp = {"data": generate_visual_representation(raw_code),
+                "variables_action": CLEAR_VARIABLES}
+        stack = [0]
 
-    if on_line == 0:
-        return generate_visual_representation(raw_code)
-    elif on_line >= 0:
-        return all_code_vis
+    elif type_ == NEXT_LINE:
+        if on_line == 0:
+            resp = {"data": generate_visual_representation(raw_code),
+                    "variables_action": KEEP_VARIABLES}
 
-stack = [0]
+        elif on_line >= 0:
+            resp = {"data": all_code_vis,
+                    "variables_action": KEEP_VARIABLES}
+
+    return resp
+
+
+
 @app.route('/next', methods=['POST'])
 def next():
     global tree, orig_tree, stack
@@ -62,7 +93,7 @@ def next():
                 'print_msg': None,
                 'global_variables': atoms.global_variables}
     else:
-        print('Oh no')
+        raise RuntimeError("Not supposed to reach here..")
 
 
 
@@ -154,8 +185,6 @@ def get_coords_and_lines_from_transformed_unrooted_tree(unrooted_tree):
 
     return coords, lines
 
-all_code_ast = []
-all_code_vis = []
 
 def generate_visual_representation(raw_code):
 
@@ -175,6 +204,8 @@ def generate_visual_representation(raw_code):
 
 
     for line in exprs:
+        if line[0] == lang.COMMENT_PREFIX:
+            continue
         tokens = lang.expand_sigil(lang.get_tokens(line))
         tokens_no_whitespace = filter(lambda token: not lang.is_whitespace(token), tokens)
 
@@ -204,7 +235,4 @@ def generate_visual_representation(raw_code):
 
 
 if __name__ == '__main__':
-    try:
-        app.run()
-    except Exception:
-        traceback.print_exc()
+    app.run()

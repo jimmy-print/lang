@@ -24,19 +24,15 @@
         <div id="codeinputareadiv">
           <h3>Code input area</h3>
           <textarea id="codeinputbox" rows="20" cols="35">
-            (set "n" 1);
-
-            (while (< $n 3)
-                      (print $n)
-                      (set "n" (+ $n 1)));
-
-
-            
-                      </textarea>
+# This program calculates 3!;
+(set "x" 3);
+(set "t" 1);
+(set "i" 1);
+          </textarea>
 
         </div>
         <div id="rundiv">
-          <button class="runbutton" onclick="run()">Load program</button>
+          <button class="runbutton" onclick="run(START_NEW_PROGRAM)">Load program</button>
         </div>
         <div id="visualiserdiv">
           <h3>Visualiser</h3>

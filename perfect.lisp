@@ -1,21 +1,21 @@
 (set "n" 2);
 (set "target" 100);
 
-(while (< ($ "n") ($ "target"))
+(while (< (get "n") (get "target"))
 	(set "perf" 0)
 	(set "i" 1)
 	(set "sum" 0)
 
-	(while (< ($ "i") ($ "n"))
-		(if (= (% ($ "n") ($ "i")) 0)
-			(set "sum" (+ ($ "sum") ($ "i"))))
-		(set "i" (+ ($ "i") 1)))
+	(while (< (get "i") (get "n"))
+		(if (= (% (get "n") (get "i")) 0)
+			(set "sum" (+ (get "sum") (get "i"))))
+		(set "i" (+ (get "i") 1)))
 
-	(if (= ($ "sum") ($ "n"))
+	(if (= (get "sum") (get "n"))
 		(set "perf" 1))
-	(if (= ($ "perf") 1)
-		(print "{}isPerfect" ($ "n")))
+	(if (= (get "perf") 1)
+		(print "{}isPerfect" (get "n")))
 
-	(set "n" (+ ($ "n") 1)));
+	(set "n" (+ (get "n") 1)));
 
-(print "allIntegersLessThan{}HaveBeenChecked" ($ "target"));
+(print "allIntegersLessThan{}HaveBeenChecked" (get "target"));
