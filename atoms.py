@@ -15,12 +15,9 @@ NOT_RAN = 'NOT_RAN'
 
 global_variables = {}
 
-class OnestepFinishedExecutionNoPrint(Exception):
-    status = 'onestep finished no print'
-class OnestepFinishedExecution(Exception):
-    status = 'onestep finished'
-class FinishedExecution(Exception):
-    status = 'whole line finished'
+ONESTEP_DONE_NO_PRINT = 'onestep finished no print'
+ONESTEP_DONE = 'onestep finished'
+FINISHED = 'whole line finished'
 
 
 INTERPRETER_PREFIX = '@'
@@ -283,19 +280,19 @@ def transform_ast(root_node):
 
     # Reconstruct an AST, after restructuring the elems to not have OPENING_BRACKET nodes.
     tree = Root()
-    tree.add(elems[0][2](elems[0][1].v, None))
+    tree.add(elems[0][2](elems[0][1].v, None, elems[0][1].orig_line_indices))
     node = tree.nodes[0]
     past_layer = elems[0][0]
     for elem in elems[1:]:
         if elem[0] > past_layer:
-            new_node = Node(elem[1].v, None)
+            new_node = Node(elem[1].v, None, elem[1].orig_line_indices)
             node.add(new_node)
         elif elem[0] == past_layer:
-            new_node = Node(elem[1].v, None)
+            new_node = Node(elem[1].v, None, elem[1].orig_line_indices)
             node.parent.add(new_node)
         elif elem[0] < past_layer:
             gap = past_layer - elem[0]
-            new_node = Node(elem[1].v, None)
+            new_node = Node(elem[1].v, None, elem[1].orig_line_indices)
             for _ in range(gap):
                 node = node.parent
             node.parent.add(new_node)
@@ -424,10 +421,11 @@ def run_onestep(tree, orig_tree, stack):
         stack.append(0)
 
         if issubclass(type(get_with_stack(tree, stack)), Node):
+            print(print_msg)
             if print_msg is None:
-                raise OnestepFinishedExecutionNoPrint
+                return (ONESTEP_DONE_NO_PRINT, None, get_with_stack(tree, stack).orig_line_indices)
             else:
-                raise OnestepFinishedExecution
+                return ONESTEP_DONE, print_msg, get_with_stack(tree, stack).orig_line_indices
         
         elif get_with_stack(tree, stack) == NO_NODES:
             stack.pop()
@@ -514,7 +512,7 @@ def run_onestep(tree, orig_tree, stack):
                     parent = get_with_stack(to_be_replaced_while_node, lower[-1][:-1])
                     val = lower[1].v
                     cl = lower[2]
-                    parent.add(cl(val,None))
+                    parent.add(cl(val,None,lower[1].orig_line_indices))
 
                 stack.pop()
 
@@ -526,17 +524,23 @@ def run_onestep(tree, orig_tree, stack):
                 stack[-1] += 1
 
         if print_msg is None:
-            raise OnestepFinishedExecutionNoPrint
+            if get_with_stack(tree, stack) == INDEX_TOO_BIG:
+                return ONESTEP_DONE_NO_PRINT, None, (None, None)
+            else:
+                return ONESTEP_DONE_NO_PRINT, None, get_with_stack(tree, stack).orig_line_indices
         else:
-            raise OnestepFinishedExecution(print_msg)
+            if get_with_stack(tree, stack) == INDEX_TOO_BIG:
+                return ONESTEP_DONE, print_msg, (None, None)
+            else:
+                return ONESTEP_DONE, print_msg, get_with_stack(tree, stack).orig_line_indices
                 
     assert len(tree.nodes) == 1
-    raise FinishedExecution
+    return FINISHED, None, (None, None)
 
 
 
 class Node:
-    def __init__(self, v, parent):
+    def __init__(self, v, parent, orig_line_indices):
         assert type(v) != Node
         # Each node may contain other node objects in its self.nodes list.
         # However, their values should not be node objects. They should be
@@ -545,6 +549,8 @@ class Node:
 
         self.nodes = []
         self.parent = parent
+
+        self.orig_line_indices = orig_line_indices
 
     def __repr__(self):
         return f' *{self.v}, {type(self)}* '
@@ -571,7 +577,7 @@ class Node:
         raise IndexError('tree index not found (out of range?)')
 
 class Root(Node):
-    def __init__(self, _=None, __=None):
-        super().__init__(ROOT, None)
+    def __init__(self, _=None, __=None, ___=None):
+        super().__init__(ROOT, None, None)
 
 class Data(Node): pass

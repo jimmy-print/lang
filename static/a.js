@@ -135,7 +135,7 @@ function run(type_) {
         url: "receive",
         type: "POST",
         data: {
-            code: $("#codeinputbox").val(),
+            code: $("#codeinputbox").text(),
             on_line: on_line,
             type_: type_
         },
@@ -226,6 +226,8 @@ function point_in_tri(x1, y1, x2, y2, x3, y3, x, y) {
 var started_running = false;
 var on_stack;
 var global_variables = [];
+var indice = [-1, -1]
+var highlighted = false;
 function drawsecond() {
     mouse_canvas_x = pos_x - dox;
     mouse_canvas_y = pos_y - doy;
@@ -300,6 +302,7 @@ function drawsecond() {
         c2.fillStyle = '#00AA00';
         document.body.style.cursor = 'grab';
         if (clicking && !got5 && !(coords.length === 0) && !(lines.length === 0)) {
+
             $.ajax({
                 url: "next",
                 type: "POST",
@@ -307,10 +310,14 @@ function drawsecond() {
                     on_line
                 },
                 success: function (response) {
+                                highlighted = false;
                     //service.php response
                     console.log(response);
-                    
+
                     if (response.status == "whole line finished") {
+                        var nohighlight = $("#codeinputbox").children()[on_line+1].textContent;
+                        $($("#codeinputbox").children()[on_line+1]).replaceWith($(`<div>${nohighlight}</div>`));
+
                         console.log("whole line finished");
                         on_line ++;
                         if (on_line == Response.data.length) {
@@ -321,6 +328,8 @@ function drawsecond() {
                         } else if (on_line < Response.data.length) {
                             run(NEXT_LINE)
                         }
+
+                                                
                     } else if (response.status == "onestep finished no print") {
                         started_running = true;
                         on_stack = response.stack;
@@ -334,6 +343,7 @@ function drawsecond() {
                     } else {
                         console.warn("status");
                     }
+                    indice = response.indice;
                 }
             });
             got5 = true;
@@ -357,6 +367,22 @@ function drawsecond() {
             }
         });
 
+        if (indice[0] >= 0 && indice[1] >= 0 && highlighted === false && !(indice[0] === null) && !(indice[1] === null)) {
+            console.log(indice[0], indice[1]);
+            var aa = $("#codeinputbox").children()[on_line+1].textContent;
+            aa = aa.replace(/[\n\r\t]/gm, "");
+
+            var before = aa.substring(0, indice[0]);
+            var substr = aa.substring(indice[0], indice[1]+2);
+            var after = aa.substring(indice[1]+2, aa.length);
+            // Watch out for XSS here
+            var newelem = $(`<div>${before}<span style="color:red">${substr}</span>${after}</div>`);
+            $($("#codeinputbox").children()[on_line+1]).replaceWith(newelem);  // the additional sigil wrapping
+            // is to ensure keep using jquery method of replaceWith, instead of native method
+            // which replaces wrongly ('[Object object]').
+            highlighted = true;
+        }
+        
     }
     c2.beginPath();
     c2.moveTo(run_x - dox, run_y - doy);
@@ -414,6 +440,21 @@ for (var i = 0; i < copybuttons.length; i++) {
    let ii = i;  // capture lambda problem solution
     copybuttons[i].onclick = (()=>{
         var code = copybuttons[ii].parentElement.children[0].innerText;
-        $("#codeinputbox").text(code);
+        $("#codeinputbox").text("");
+
+
+        var tmp = '';
+        var splitted = code.split(';');
+        splitted.pop()
+        splitted.forEach((line)=>{
+            tmp += '<div>';
+            tmp += line;
+            tmp += ';';
+            tmp += '</div>';
+            console.log(line);
+        });
+
+        $("#codeinputbox").append(tmp);
+
     });
 }

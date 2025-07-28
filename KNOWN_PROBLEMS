@@ -12,3 +12,9 @@ i.e. when program has been completely executed, need to load new program and res
 variables, on_line, etc
 rn cannot reset anything
 page reload also doesnt reset any server side variables, which fucks shit up.
+
+
+Vulnerable to XSS right now, because through #codeinputbox, all sorts of stuff may be appended to DOM. No stored XSS though, just reflected session stuff. This server also doesn't store any sensitive data.
+
+
+Highlighting text not perfect, (print (multiply 1 2)), when on multiply node, only (m is being highlighted.

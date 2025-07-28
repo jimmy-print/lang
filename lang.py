@@ -137,16 +137,23 @@ def get_tokens(expression):
                 tok += char
                 cut_off_tok = True
         if cut_off_tok:
-            toks.append(tok)
+
+            toks.append((tok, (i-len(tok), i-1)))
             tok = ""
     return toks
 
-def expand_sigil(toks):
+def expand_sigil(toks, indices):
     new_toks = []
+    new_indices = []
     next_iter_dont_push = False
     i = 0
     while i < len(toks):
         if toks[i] == SIGIL_CHAR_STR:
+            new_indices.append((indices[i][0], indices[i][1]))
+            new_indices.append((indices[i][0], indices[i][1]))
+            new_indices.append((indices[i][0], indices[i][1]))
+            new_indices.append((indices[i][0], indices[i][1]))
+
             new_toks.append(OPENING_BRACKET)
             new_toks.append(SIGIL_CHAR_STR)
             new_toks.append(f"{QUOTE_CHAR}{toks[i + 1]}{QUOTE_CHAR}")
@@ -154,11 +161,12 @@ def expand_sigil(toks):
 
             i += 2
         else:
+            new_indices.append((indices[i][0], indices[i][1]))
             new_toks.append(toks[i])
             i += 1
-    return new_toks
+    return new_toks, new_indices
             
-def get_tree(tokens):
+def get_tree(tokens, indices):
     tree = Root()
 
     on_tok = index(tree, 0)
@@ -175,14 +183,14 @@ def get_tree(tokens):
             continue
 
         if tok == OPENING_BRACKET:
-            on_tok.add(Node(tok, None))
+            on_tok.add(Node(tok, None, indices[__]))
         else:
             if is_int(tok):
-                on_tok.add(Data(int(tok), None))
+                on_tok.add(Data(int(tok), None, indices[__]))
             elif is_str(tok):
-                on_tok.add(Data(str(tok.strip('"')), None))
+                on_tok.add(Data(str(tok.strip('"')), None, indices[__]))
             else:
-                on_tok.add(Node(tok, None))
+                on_tok.add(Node(tok, None, indices[__]))
 
         if tok == OPENING_BRACKET:
             on_tok = index(tree, II + 1)
@@ -215,7 +223,9 @@ if __name__ == '__main__':
         exprs.append(also_no_redundant_spaces)
 
     for n, line in enumerate(exprs):
-        tokens = expand_sigil(get_tokens(line))
+        res = get_tokens(line)
+        tokens = [a[0] for a in res]
+        tokens = expand_sigil(tokens)
         tokens_wo_whitespace = filter(lambda token: not is_whitespace(token), tokens)
         tree = get_tree(tokens_wo_whitespace)
 

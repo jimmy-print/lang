@@ -7,7 +7,7 @@
 
 #footer {
     margin-top: 2rem;
-width: 100%;
+    width: 100%;
     background-color: lightgrey;
     padding-top: 2rem;
     padding-bottom: 2rem;
@@ -15,11 +15,6 @@ width: 100%;
 
 #footer p {
     font-size: 0.8rem;
-}
-
-
-#body {
-
 }
 
 .center{
@@ -40,10 +35,6 @@ h1 {
     font-size: 1.5rem;
 }
 
-#body p {
-
-}
-
 #towriteinto {
     background-color: black;
     color: #00FF00;
@@ -59,7 +50,21 @@ body {
 
 #codeinputbox {
     font-size: 1rem;
+    font-family: monospace;
+    height: 370px;
+    width: 400px;
+    border: 1px solid grey;
 }
+
+#codeinputbox:focus {
+    border: 1px solid black;
+
+}
+
+[contenteditable] {
+    outline: 0px solid transparent;
+}
+
 
 .flexcontainer {
     display: flex;
@@ -119,16 +124,7 @@ flex-grow: 1;
   background-image: linear-gradient(-180deg, #020089 0%, #2a28a8 100%);
 }
 
-@media (min-width: 768px) {
-  #runbutton {
-  }
+
+.copybutton {
+    margin-bottom: 15px;
 }
-}
-
-#runbutton:hover {
-
-}
-
-
-
-

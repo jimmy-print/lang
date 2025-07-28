@@ -2,8 +2,9 @@ import flask
 import copy
 import lang, atoms
 import traceback
-from atoms import OnestepFinishedExecution, FinishedExecution
-from atoms import OnestepFinishedExecutionNoPrint
+from atoms import ONESTEP_DONE
+from atoms import ONESTEP_DONE_NO_PRINT
+from atoms import FINISHED
 from atoms import global_variables
 
 app = flask.Flask(__name__)
@@ -72,26 +73,29 @@ def next():
     tree = all_code_ast[on_line]['tree']
     orig_tree = all_code_ast[on_line]['orig_tree']
     
-    try:
-        atoms.run_onestep(tree, orig_tree, stack)
-    except OnestepFinishedExecutionNoPrint as e:
-        return {'status': e.status,
+    status, print_msg, indice = atoms.run_onestep(tree, orig_tree, stack)
+    print(indice)
+    if status == ONESTEP_DONE_NO_PRINT:
+        return {'status': status,
                 'stack': stack[1:len(stack)],
                 'print_msg': -1,
-                'global_variables': atoms.global_variables}
+                'global_variables': atoms.global_variables,
+                'indice': indice}
         # because in below func, coords is based on the expansion
         # of a tree that has had its root node removed, unlike global_tree
-    except OnestepFinishedExecution as e:
-        return {'status': e.status,
+    elif status == ONESTEP_DONE:
+        return {'status': status,
                 'stack': stack[1:len(stack)],
-                'print_msg': str(e),
-                'global_variables': atoms.global_variables}
-    except FinishedExecution as e:
+                'print_msg': print_msg,
+                'global_variables': atoms.global_variables,
+                'indice': indice}
+    elif status == FINISHED:
         stack = [0]
-        return {'status': e.status,
+        return {'status': status,
                 'stack': None,
-                'print_msg': None,
-                'global_variables': atoms.global_variables}
+                'print_msg': -1,
+                'global_variables': atoms.global_variables,
+                'indice': indice}
     else:
         raise RuntimeError("Not supposed to reach here..")
 
@@ -206,11 +210,15 @@ def generate_visual_representation(raw_code):
     for line in exprs:
         if line[0] == lang.COMMENT_PREFIX:
             continue
-        tokens = lang.expand_sigil(lang.get_tokens(line))
-        tokens_no_whitespace = filter(lambda token: not lang.is_whitespace(token), tokens)
+        res = lang.get_tokens(line)
+        tokens = [a[0] for a in res]
+        indices = [b[1] for b in res]
+        
+        tokens, indices = lang.expand_sigil(tokens, indices)
+        tokens_no_whitespace = list(filter(lambda token: not lang.is_whitespace(token), tokens))
 
 
-        rooted_tree = lang.get_tree(tokens_no_whitespace)
+        rooted_tree = lang.get_tree(tokens_no_whitespace, indices)
         transformed_tree = atoms.transform_ast(rooted_tree)
         unrooted_tree = transformed_tree.nodes[0]
         
