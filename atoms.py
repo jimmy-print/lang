@@ -421,7 +421,6 @@ def run_onestep(tree, orig_tree, stack):
         stack.append(0)
 
         if issubclass(type(get_with_stack(tree, stack)), Node):
-            print(print_msg)
             if print_msg is None:
                 return (ONESTEP_DONE_NO_PRINT, None, get_with_stack(tree, stack).orig_line_indices)
             else:
@@ -476,7 +475,6 @@ def run_onestep(tree, orig_tree, stack):
             if not ancestor_control_nodes:
                 parent_func_is_toplevel = True
 
-            print_msg = None
             if parent_func_is_toplevel:
                 r = f(args)
                 if f == print_:
@@ -522,7 +520,8 @@ def run_onestep(tree, orig_tree, stack):
 
                 stack.pop()
                 stack[-1] += 1
-
+            print('msg:',print_msg)
+                
         if print_msg is None:
             if get_with_stack(tree, stack) == INDEX_TOO_BIG:
                 return ONESTEP_DONE_NO_PRINT, None, (None, None)

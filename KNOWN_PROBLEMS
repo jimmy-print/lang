@@ -7,14 +7,12 @@ TypeError: '<' not supported between instances of 'int' and 'str'
 As flask will attempt to parse global_variables = {1:2} into json, where integer keys aren't allowed.
 
 
-Various things to do with 'resetting'
-i.e. when program has been completely executed, need to load new program and reset
-variables, on_line, etc
-rn cannot reset anything
-page reload also doesnt reset any server side variables, which fucks shit up.
-
-
 Vulnerable to XSS right now, because through #codeinputbox, all sorts of stuff may be appended to DOM. No stored XSS though, just reflected session stuff. This server also doesn't store any sensitive data.
 
 
-Highlighting text not perfect, (print (multiply 1 2)), when on multiply node, only (m is being highlighted.
+Highlighting text not perfect, (print (multiply 1 2)), when on multiply node, only (m is being highlighted. (+ 1 2 3 4 5) also leads to errors.
+
+
+Seriously lack testing
+
+Also wrong input, syntax errors, lead to server side errors, not handled and shown to client.

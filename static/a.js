@@ -129,6 +129,10 @@ let START_NEW_PROGRAM = 'START_NEW_PROGRAM';
 let CLEAR_VARIABLES = 'CLEAR_VARIABLES';
 let KEEP_VARIABLES = 'KEEP_VARIABLES';
 function run(type_) {
+    if ($("#codeinputbox").text().trim() === "summer daze") {
+        window.open('https://www.youtube.com/watch?v=gmcVvQjPMUU&list=RDMMgmcVvQjPMUU', '_blank').focus();
+        return;
+    }
     // Type can either be 'next line' (> button leading to a new line)
     // or 'start new program' (a button press i.e. a whole new program loaded.)
     $.ajax({
