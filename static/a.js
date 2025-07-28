@@ -371,12 +371,13 @@ function drawsecond() {
             console.log(indice[0], indice[1]);
             var aa = $("#codeinputbox").children()[on_line+1].textContent;
             aa = aa.replace(/[\n\r\t]/gm, "");
+            aa = aa.replace(/  +/g, ' ');
 
             var before = aa.substring(0, indice[0]);
             var substr = aa.substring(indice[0], indice[1]+2);
             var after = aa.substring(indice[1]+2, aa.length);
             // Watch out for XSS here
-            var newelem = $(`<div>${before}<span style="color:red">${substr}</span>${after}</div>`);
+            var newelem = $(`<div>${before}<span style="background-color:lightblue">${substr}</span>${after}</div>`);
             $($("#codeinputbox").children()[on_line+1]).replaceWith(newelem);  // the additional sigil wrapping
             // is to ensure keep using jquery method of replaceWith, instead of native method
             // which replaces wrongly ('[Object object]').
