@@ -330,9 +330,9 @@ function drawsecond() {
                     console.log(response);
 
                     if (response.status == "whole line finished") {
-                        var nohighlight = $("#codeinputbox").children()[on_line+1].textContent;
+                        var nohighlight = $("#codeinputbox").children()[on_line].textContent;
                         nohighlight = escapeHTML(nohighlight);
-                        $($("#codeinputbox").children()[on_line+1]).replaceWith($(`<div>${nohighlight}</div>`));
+                        $($("#codeinputbox").children()[on_line]).replaceWith($(`<div>${nohighlight}</div>`));
 
                         console.log("whole line finished");
                         on_line ++;
@@ -385,7 +385,7 @@ function drawsecond() {
 
         if (indice[0] >= 0 && indice[1] >= 0 && highlighted === false && !(indice[0] === null) && !(indice[1] === null)) {
             console.log(indice[0], indice[1]);
-            var aa = $("#codeinputbox").children()[on_line+1].textContent;
+            var aa = $("#codeinputbox").children()[on_line].textContent;
             aa = aa.replace(/[\n\r\t]/gm, "");
             aa = aa.replace(/  +/g, ' ');
 
@@ -394,7 +394,7 @@ function drawsecond() {
             var after = escapeHTML(aa.substring(indice[1]+2, aa.length));
             // Watch out for XSS here
             var newelem = $(`<div>${before}<span style="background-color:lightblue">${substr}</span>${after}</div>`);
-            $($("#codeinputbox").children()[on_line+1]).replaceWith(newelem);  // the additional sigil wrapping
+            $($("#codeinputbox").children()[on_line]).replaceWith(newelem);  // the additional sigil wrapping
             // is to ensure keep using jquery method of replaceWith, instead of native method
             // which replaces wrongly ('[Object object]').
             highlighted = true;
