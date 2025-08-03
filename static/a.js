@@ -110,7 +110,18 @@ var on_line = 0;
 var coords = [];
 var lines = [];
 var jj = 0;
+
+function escapeHTML(s) { 
+        return s.replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
 function print_msg(msg) {
+    
+
+    msg = escapeHTML(msg);
+    
     var box = $("#towriteinto");
     var alr_there = $("#towriteinto span").length;
     var max_msgs = 10;
@@ -320,6 +331,7 @@ function drawsecond() {
 
                     if (response.status == "whole line finished") {
                         var nohighlight = $("#codeinputbox").children()[on_line+1].textContent;
+                        nohighlight = escapeHTML(nohighlight);
                         $($("#codeinputbox").children()[on_line+1]).replaceWith($(`<div>${nohighlight}</div>`));
 
                         console.log("whole line finished");
@@ -377,9 +389,9 @@ function drawsecond() {
             aa = aa.replace(/[\n\r\t]/gm, "");
             aa = aa.replace(/  +/g, ' ');
 
-            var before = aa.substring(0, indice[0]);
-            var substr = aa.substring(indice[0], indice[1]+2);
-            var after = aa.substring(indice[1]+2, aa.length);
+            var before = escapeHTML(aa.substring(0, indice[0]));
+            var substr = escapeHTML(aa.substring(indice[0], indice[1]+2));
+            var after = escapeHTML(aa.substring(indice[1]+2, aa.length));
             // Watch out for XSS here
             var newelem = $(`<div>${before}<span style="background-color:lightblue">${substr}</span>${after}</div>`);
             $($("#codeinputbox").children()[on_line+1]).replaceWith(newelem);  // the additional sigil wrapping
